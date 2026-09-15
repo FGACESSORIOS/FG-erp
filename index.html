@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<title>FG Acessórios ERP</title>
+<style>
+*{box-sizing:border-box}
+body,input,select,textarea,button{font-family:Arial,sans-serif}
+body{margin:0;background:#0d0d0d;color:white}
+.container{display:flex;min-height:100vh}
+.menu{width:260px;background:#050505;border-right:2px solid #ffe200;padding:20px}
+.logo{text-align:center;border-bottom:1px solid #333;padding-bottom:20px}
+.logo h2{color:#ffe200}
+.menu button{width:100%;padding:14px;margin-top:12px;background:#1b1b1b;color:white;border:1px solid #ffe200;border-radius:8px;cursor:pointer;text-align:left}
+.menu button:hover{background:#ffe200;color:#000}
+.conteudo{flex:1;padding:30px;overflow:auto}
+h1,h2,h3{color:#ffe200}
+.tela{display:none}.ativa{display:block}
+.box{background:#1b1b1b;padding:20px;border-radius:12px;border-left:5px solid #ffe200;margin-top:20px}
+input,select,textarea{width:100%;padding:10px;margin:8px 0;background:#111;color:white;border:1px solid #555;border-radius:5px}
+.btn{background:#ffe200;color:#000;padding:12px;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+.btn:hover{filter:brightness(.92)}
+.acoes-pedido{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn-acao{padding:8px 10px;font-size:13px}
+.btn-pdf{background:#fff;color:#111;border:1px solid #ffe200}
+.btn-excluir{background:#8f1d1d;color:#fff}
+.estado-vazio{color:#aaa;padding:24px;text-align:center}
+.dashboard-controles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:15px}
+.dashboard-resumo{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin:12px 0 20px}
+.dashboard-total{font-size:32px;font-weight:bold;color:#ffe200}
+.dashboard-quantidade{color:#bbb;margin-bottom:5px}
+table{width:100%;border-collapse:collapse;margin-top:20px}
+canvas{background:#111;width:100%;height:300px}
+th{background:#ffe200;color:#000}
+td,th{padding:12px 15px;border:1px solid #333;text-align:center}
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center}
+.modal-content{background:#1b1b1b;padding:25px;border-radius:12px;border-left:5px solid #ffe200;width:90%;max-width:700px;max-height:85vh;overflow-y:auto;position:relative}
+@media(max-width:800px){.container{display:block}.menu{width:100%;border-right:0;border-bottom:2px solid #ffe200}.conteudo{padding:18px}.dashboard-controles{grid-template-columns:1fr}.box{overflow-x:auto}table{min-width:650px}}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<aside class="menu">
+<div class="logo"><img src="data:image/png;base64,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" alt="FG Acessórios" style="max-width:100%; height:auto; border-radius:6px;"></div>
+<button onclick="abrir('dashboard')">🏠 Vendas</button>
+<button onclick="abrir('produtos')">📦 Produtos</button>
+<button onclick="abrir('estoque')">📊 Estoque</button>
+<button onclick="abrir('producao')">🏭 Lançar Produção</button>
+<button onclick="abrir('saida')">📤 Saída de Estoque</button>
+<button onclick="abrir('compras')">🛒 Compras</button>
+<button onclick="abrir('clientes')">👥 Clientes</button>
+<button onclick="abrir('pedidos')">📝 Pedidos</button>
+</aside>
+
+<main class="conteudo">
+
+<section id="dashboard" class="tela ativa">
+<h1>Vendas</h1>
+
+<!-- Dashboard 1: Valor total de pedidos -->
+<div class="box">
+<h2>1. Valor total de pedidos</h2>
+
+<div class="dashboard-controles">
+<select id="dashboardMes" onchange="atualizarDashboard()">
+<option value="todos">Todos os meses</option>
+<option value="0">Janeiro</option>
+<option value="1">Fevereiro</option>
+<option value="2">Março</option>
+<option value="3">Abril</option>
+<option value="4">Maio</option>
+<option value="5">Junho</option>
+<option value="6">Julho</option>
+<option value="7">Agosto</option>
+<option value="8">Setembro</option>
+<option value="9">Outubro</option>
+<option value="10">Novembro</option>
+<option value="11">Dezembro</option>
+</select>
+
+<select id="dashboardAno" onchange="atualizarDashboard()"></select>
+
+<select id="dashboardStatus" onchange="atualizarDashboard()">
+<option value="todos">Todos os status</option>
+<option value="Orçamento">Orçamento</option>
+<option value="Em produção">Em produção</option>
+<option value="Em trânsito">Em trânsito</option>
+<option value="Aguardando Pagamento">Aguardando Pagamento</option>
+<option value="Entregue">Entregue</option>
+<option value="Cancelado">Cancelado</option>
+</select>
+</div>
+
+<div class="dashboard-resumo">
+<div id="valorTotalPedidos" class="dashboard-total">R$ 0,00</div>
+<div id="quantidadePedidos" class="dashboard-quantidade">0 pedidos</div>
+</div>
+
+<canvas id="grafico"></canvas>
+
+</div>
+
+<!-- Dashboard 2: Somatória dos pedidos por Estado -->
+<div class="box">
+<h2>2. Vendas por Estado (UF)</h2>
+<div id="dashboardEstadosTabela"></div>
+</div>
+
+<!-- Dashboard 3: Custo total e Lucro total dos pedidos -->
+<div class="box">
+<h2>3. Custo e Lucro dos Pedidos</h2>
+<div class="dashboard-resumo" style="justify-content:space-between; width:100%;">
+<div><small style="color:#aaa;display:block">TOTAL VENDAS</small><strong id="vendasTotalValor" style="font-size:24px;color:#ffe200">R$ 0,00</strong></div>
+<div><small style="color:#aaa;display:block">CUSTO TOTAL</small><strong id="custoTotalValor" style="font-size:24px;color:#ff6b6b">R$ 0,00</strong></div>
+<div><small style="color:#aaa;display:block">LUCRO TOTAL</small><strong id="lucroTotalValor" style="font-size:24px;color:#28a745">R$ 0,00</strong></div>
+<div><small style="color:#aaa;display:block">MARGEM DE LUCRO</small><strong id="margemLucroValor" style="font-size:24px;color:#fff">0,0%</strong></div>
+</div>
+<br>
+<canvas id="graficoCustoLucro" style="height:280px;"></canvas>
+</div>
+
+</section>
+
+<section id="produtos" class="tela">
+<h1>Produtos</h1>
+<button class="btn" onclick="novoProduto()">+ NOVO PRODUTO</button>
+
+<div class="box" id="formProduto" style="display:none">
+<input id="codigo" placeholder="Código">
+<input id="descricao" placeholder="Descrição">
+
+<select id="categoria">
+<option>Matéria prima Injeção</option>
+<option>Produto acabado</option>
+<option>Pigmento</option>
+</select>
+
+<select id="unidade">
+<option>UN</option><option>KG</option><option>PAR</option><option>G</option>
+</select>
+<input id="cor" placeholder="Cor">
+<input id="custo" placeholder="Custo do Produto (R$)" oninput="formatarMoeda(this)">
+<button class="btn" onclick="salvarProduto()">SALVAR</button>
+<button class="btn" onclick="cancelar()">CANCELAR</button>
+</div>
+
+<div class="box">
+<input id="pesquisa" placeholder="Pesquisar produto" onkeyup="pesquisar()">
+<table>
+<thead><tr><th>Código</th><th>Descrição</th><th>Categoria</th><th>Unidade</th><th>Cor</th><th>Custo (R$)</th><th>Ação</th></tr></thead>
+<tbody id="listaProdutos"></tbody>
+</table>
+</div>
+</section>
+
+<section id="estoque" class="tela">
+<h1>Estoque</h1>
+<div class="box">
+<input id="pesquisaEstoque" placeholder="Pesquisar no estoque..." onkeyup="pesquisarEstoque()">
+<table>
+<thead><tr><th>Código</th><th>Descrição</th><th>Unidade</th><th>Cor</th><th>Qtd. Disponível</th><th>Qtd. A Produzir</th><th>Qtd. Reservada</th><th>Valor do Estoque</th></tr></thead>
+<tbody id="listaEstoque"></tbody>
+</table>
+</div>
+</section>
+
+<section id="producao" class="tela">
+<h1>Lançar Produção</h1>
+<div class="box">
+
+<select id="pproduto">
+<option value="">Selecione produto acabado</option>
+</select>
+
+<input id="pquantidade" type="number" min="1" placeholder="Quantidade produzida">
+<button class="btn" onclick="salvarProducao()">LANÇAR PRODUÇÃO</button>
+</div>
+</section>
+
+
+<section id="saida" class="tela">
+<h1>Saída de Estoque</h1>
+
+<div class="box">
+<select id="produtoSaida">
+<option value="">Selecione o produto</option>
+</select>
+<input id="quantidadeSaida" type="number" placeholder="Quantidade para baixar">
+<input id="motivoSaida" placeholder="Motivo da baixa (Obrigatório)">
+<label style="display:block; margin: 10px 0; font-size:14px; color:#aaa;">
+    <input type="checkbox" id="reduzirReserva" style="width:auto; margin-right:8px;">
+    Reduzir também da quantidade reservada (Se for envio de pedido)
+</label>
+<button class="btn" onclick="baixarEstoque()">BAIXAR ESTOQUE</button>
+</div>
+
+<div class="box">
+<h2>Histórico de Baixas</h2>
+<table>
+<thead><tr><th>Data</th><th>Produto</th><th>Motivo</th><th>Qtd</th></tr></thead>
+<tbody id="listaBaixas"></tbody>
+</table>
+</div>
+</section>
+
+
+<section id="compras" class="tela">
+
+<h1>Compras</h1>
+
+<div class="box">
+
+<select id="produtoCompra">
+<option value="">Selecione o produto</option>
+</select>
+
+<input id="precoCompra" placeholder="Preço de compra (R$)" oninput="formatarMoeda(this)">
+<input id="quantidadeCompra" type="number" min="1" placeholder="Quantidade comprada">
+
+<button class="btn" onclick="salvarCompra()">SALVAR COMPRA</button>
+
+</div>
+
+
+<div class="box">
+
+<table>
+
+<thead>
+<tr>
+<th>Código</th>
+<th>Descrição</th>
+<th>Preço Compra</th>
+<th>Quantidade</th>
+</tr>
+</thead>
+
+<tbody id="listaCompras"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<section id="clientes" class="tela">
+
+<h1>Clientes</h1>
+
+<button class="btn" onclick="novoCliente()">+ NOVO CLIENTE</button>
+
+<div id="cadastroCliente" class="box" style="display:none">
+
+<h2>Cadastro Comercial e Logística</h2>
+
+<input id="clienteDocumento" placeholder="CNPJ ou CPF">
+<button class="btn" onclick="consultarCNPJ()">🔍 CONSULTAR CNPJ</button>
+
+<input id="clienteNome" placeholder="Razão Social / Nome">
+
+<input id="clienteFantasia" placeholder="Nome Fantasia">
+
+<input id="clienteTelefone" placeholder="Telefone">
+
+<input id="clienteEmail" placeholder="E-mail">
+
+<input id="clienteCep" placeholder="CEP">
+
+<input id="clienteEndereco" placeholder="Endereço">
+
+<input id="clienteNumero" placeholder="Número">
+
+<input id="clienteComplemento" placeholder="Complemento">
+
+<input id="clienteBairro" placeholder="Bairro">
+
+<input id="clienteCidade" placeholder="Cidade">
+
+<input id="clienteEstado" placeholder="Estado (UF)">
+
+<input id="clienteContato" placeholder="Pessoa de contato">
+
+<button class="btn" onclick="salvarCliente()">SALVAR</button>
+<button class="btn" onclick="cancelarCliente()">CANCELAR</button>
+
+</div>
+
+
+<div class="box">
+
+<input id="pesquisaCliente" placeholder="Pesquisar cliente..." onkeyup="pesquisarCliente()">
+
+<table>
+
+<thead>
+<tr>
+<th>Documento</th>
+<th>Nome</th>
+<th>Estado</th>
+<th>Cidade</th>
+<th>Ação</th>
+</tr>
+</thead>
+
+<tbody id="listaClientes"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+
+<section id="pedidos" class="tela">
+
+<h1>Pedidos</h1>
+
+<button class="btn" onclick="abrirNovoPedido()">+ NOVO PEDIDO</button>
+
+<!-- Barra de Filtros de Situação -->
+<div class="filtros-pedidos" style="margin: 15px 0; display: flex; gap: 8px; flex-wrap: wrap;">
+    <button class="btn btn-filtro ativo" onclick="filtrarPedidos('todos')" style="background-color: #ffe200; color: #111;">Todos</button>
+    <button class="btn btn-filtro" onclick="filtrarPedidos('Orçamento')">Orçamento</button>
+    <button class="btn btn-filtro" onclick="filtrarPedidos('Em produção')">Em produção</button>
+    <button class="btn btn-filtro" onclick="filtrarPedidos('Em trânsito')">Em trânsito</button>
+    <button class="btn btn-filtro" onclick="filtrarPedidos('Aguardando Pagamento')">Aguardando Pagamento</button>
+    <button class="btn btn-filtro" onclick="filtrarPedidos('Entregue')">Entregue</button>
+    <button class="btn btn-filtro" onclick="filtrarPedidos('Cancelado')">Cancelado</button>
+</div>
+
+<div class="box">
+
+<h2>Pedidos Cadastrados</h2>
+
+<table>
+<thead>
+<tr>
+<th>ID do Pedido</th>
+<th>Data</th>
+<th>Status</th>
+<th>Cliente</th>
+<th>Estado</th>
+<th>Total</th>
+<th>Ações</th>
+</tr>
+</thead>
+
+<tbody id="listaPedidosCadastrados"></tbody>
+
+</table>
+
+</div>
+
+<div id="formNovoPedido" class="box" style="display:none">
+
+<h2 id="tituloFormPedido">Novo Pedido</h2>
+
+<h3>ID do Pedido</h3>
+<input id="idPedido" readonly>
+
+<h3>Cliente</h3>
+<select id="clientePedido" onchange="selecionarClientePedido()"></select>
+
+<hr>
+
+<h3>Item</h3>
+<select id="produtoPedido"></select>
+
+<input id="quantidadePedido" type="number" min="1" placeholder="Quantidade">
+
+<input id="valorUnitarioPedido" placeholder="Valor unitário" oninput="formatarMoeda(this)">
+
+<button class="btn" onclick="incluirItemPedido()">INCLUIR ITEM</button>
+
+<table>
+<thead>
+<tr>
+<th>Produto</th>
+<th>Unidade</th>
+<th>Quantidade</th>
+<th>Valor Unitário</th>
+<th>Total</th>
+<th>Ação</th>
+</tr>
+</thead>
+<tbody id="itensPedido"></tbody>
+</table>
+
+<h3 id="totalPedido">Total: R$ 0,00</h3>
+
+<h3>Valor do Frete (R$)</h3>
+<input id="fretePedido" placeholder="R$ 0,00" oninput="formatarMoeda(this); recalcularTotalFormPedido();">
+
+<h3>Status do Pedido</h3>
+<select id="statusPedido">
+<option>Orçamento</option>
+<option>Em produção</option>
+<option>Em trânsito</option>
+<option>Aguardando Pagamento</option>
+<option>Entregue</option>
+<option>Cancelado</option>
+</select>
+
+<h3>Forma de pagamento</h3>
+<select id="pagamentoPedido">
+<option>7</option>
+<option>14</option>
+<option>21</option>
+<option>28</option>
+<option>28/42</option>
+<option>Antecipado</option>
+</select>
+
+<h3>Observação geral</h3>
+<textarea id="observacaoPedido" placeholder="Observações" style="width:100%; height:150px; resize:vertical;"></textarea>
+
+<br><br>
+
+<button id="btnSalvarPedido" class="btn" onclick="salvarNovoPedido()">SALVAR PEDIDO</button>
+<button class="btn" onclick="cancelarNovoPedido()">CANCELAR</button>
+
+</div>
+
+</section>
+
+</main>
+</div>
+
+<!-- Modal para Detalhes da Reserva -->
+<div id="modalReserva" class="modal-overlay">
+  <div class="modal-content">
+    <h2 id="modalReservaTitulo">Pedidos em Reserva</h2>
+    <p id="modalReservaSubtitulo" style="color:#aaa; font-size:14px; margin-bottom:15px;"></p>
+    <div id="modalReservaTabela"></div>
+    <br>
+    <button class="btn" onclick="fecharModalReserva()">FECHAR</button>
+  </div>
+</div>
+
+<script>
+let produtos = lerLista("fg_produtos");
+let baixasEstoque = lerLista("fg_baixas");
+let producoes = lerLista("fg_producoes");
+let compras = lerLista("fg_compras");
+let clientes = lerLista("fg_clientes");
+let produtoEditando = -1;
+let clienteEditando = -1;
+
+function lerLista(chave){
+try{
+const dados = JSON.parse(localStorage.getItem(chave));
+return Array.isArray(dados) ? dados : [];
+}catch(erro){
+return [];
+}
+}
+
+function salvarLista(chave, lista){
+localStorage.setItem(chave, JSON.stringify(lista));
+}
+
+function abrir(t){
+document.querySelectorAll(".tela").forEach(e=>e.classList.remove("ativa"));
+const tela = document.getElementById(t);
+if(!tela) return;
+tela.classList.add("ativa");
+if(t=="dashboard")atualizarDashboard();
+if(t=="estoque")listarEstoque();
+if(t=="compras"){carregarProdutosCompra();listarCompras();}
+if(t=="clientes")listarClientes();
+if(t=="pedidos")listarPedidosCadastrados();
+if(t=="saida"){carregarProdutosSaida();listarBaixas();}
+if(t=="producao")carregarProdutosAcabados();
+}
+
+function novoProduto(){
+produtoEditando=-1;
+limpar();
+document.getElementById("formProduto").style.display="block";
+}
+
+function salvarProduto(){
+const codigo = document.getElementById("codigo").value.trim();
+const descricao = document.getElementById("descricao").value.trim();
+
+if(!codigo || !descricao){
+alert("Informe o código e a descrição do produto.");
+return;
+}
+
+const anterior = produtoEditando >= 0 ? produtos[produtoEditando] : {};
+const produto={
+...anterior,
+codigo:codigo,
+descricao:descricao,
+categoria:document.getElementById("categoria").value,
+unidade:document.getElementById("unidade").value,
+cor:document.getElementById("cor").value.trim(),
+custo:lerMoeda(document.getElementById("custo").value),
+quantidade:Number(anterior.quantidade) || 0
+};
+
+if(produtoEditando>=0) produtos[produtoEditando]=produto;
+else produtos.push(produto);
+
+salvarLista("fg_produtos",produtos);
+listarProdutos();
+listarEstoque();
+cancelar();
+}
+
+function editarProduto(i){
+const p=produtos[i];
+if(!p) return;
+produtoEditando=i;
+document.getElementById("codigo").value=p.codigo || "";
+document.getElementById("descricao").value=p.descricao || "";
+document.getElementById("categoria").value=p.categoria || "Produto acabado";
+document.getElementById("unidade").value=p.unidade || "UN";
+document.getElementById("cor").value=p.cor || "";
+document.getElementById("custo").value=p.custo ? formatarMoedaPedido(p.custo) : "";
+document.getElementById("formProduto").style.display="block";
+}
+
+function cancelar(){
+document.getElementById("formProduto").style.display="none";
+produtoEditando=-1;
+limpar();
+}
+
+function limpar(){
+document.getElementById("codigo").value="";
+document.getElementById("descricao").value="";
+document.getElementById("cor").value="";
+document.getElementById("custo").value="";
+document.getElementById("categoria").value="Produto acabado";
+document.getElementById("unidade").value="UN";
+}
+
+function listarProdutos(){
+const tabela=document.getElementById("listaProdutos");
+if(!tabela) return;
+tabela.innerHTML="";
+
+if(!produtos.length){
+tabela.innerHTML='<tr><td colspan="7" class="estado-vazio">Nenhum produto cadastrado.</td></tr>';
+return;
+}
+
+produtos.forEach((p,i)=>{
+tabela.innerHTML += `
+<tr>
+<td>${escaparHTML(p.codigo || "")}</td>
+<td>${escaparHTML(p.descricao || "")}</td>
+<td>${escaparHTML(p.categoria || "")}</td>
+<td>${escaparHTML(p.unidade || "")}</td>
+<td>${escaparHTML(p.cor || "")}</td>
+<td>${formatarMoedaPedido(p.custo || 0)}</td>
+<td>
+<div class="acoes-pedido">
+<button class="btn btn-acao" onclick="editarProduto(${i})">✏ Editar</button>
+<button class="btn btn-acao btn-excluir" onclick="excluirProduto(${i})">🗑 Excluir</button>
+</div>
+</td>
+</tr>`;
+});
+}
+
+function normalizarStatusPedido(st){
+if(st === "Produção") return "Em produção";
+return st || "Orçamento";
+}
+
+function obterReservaProduto(p){
+const pedidos = lerLista("fg_pedidos");
+const statusReservados = ["Em produção", "Em trânsito", "Aguardando Pagamento"];
+let qtdReservada = 0;
+let pedidosReservados = [];
+
+pedidos.forEach(pedido => {
+const stNormalizado = normalizarStatusPedido(pedido.status);
+if(statusReservados.includes(stNormalizado)){
+const itens = normalizarItensPedido(pedido);
+itens.forEach(item => {
+if(item.produto === p.descricao || item.produto === p.codigo || (item.codigo && item.codigo === p.codigo)){
+qtdReservada += Number(item.quantidade) || 0;
+pedidosReservados.push({
+id: pedido.id,
+cliente: pedido.cliente,
+status: stNormalizado,
+data: pedido.data,
+quantidade: Number(item.quantidade) || 0
+});
+}
+});
+}
+});
+
+
+qtdReservada -= (Number(p.reservaBaixada) || 0);
+if(qtdReservada < 0) qtdReservada = 0;
+return { qtdReservada, pedidosReservados };
+}
+
+function listarEstoque() {
+    const tabela = document.getElementById("listaEstoque");
+    if(!tabela) return;
+    tabela.innerHTML = "";
+
+    if(!produtos.length) {
+        tabela.innerHTML = '<tr><td colspan="8" class="estado-vazio">Nenhum produto cadastrado.</td></tr>';
+        return;
+    }
+
+    produtos.forEach((p, i) => {
+        const qtdFisica = Number(p.quantidade) || 0;
+        const reserva = obterReservaProduto(p);
+        const qtdReservada = reserva.qtdReservada;
+        const qtdDisponivel = Math.max(0, qtdFisica - qtdReservada);
+        const qtdParaProduzir = Math.max(0, qtdReservada - qtdFisica);
+        const custoUnit = Number(p.custo) || 0;
+        const valorEstoque = custoUnit * qtdDisponivel;
+
+        const reservadoBtn = qtdReservada > 0 ? 
+            `<button class="btn btn-acao" onclick="abrirModalReserva(${i})">${qtdReservada} 🔍 Consultar</button>` : 
+            `0`;
+
+        tabela.innerHTML += `
+        <tr>
+            <td>${escaparHTML(p.codigo || "")}</td>
+            <td>${escaparHTML(p.descricao || "")}</td>
+            <td>${escaparHTML(p.unidade || "")}</td>
+            <td>${escaparHTML(p.cor || "")}</td>
+            <td style="font-weight:bold; color:#ffe200;">${qtdDisponivel}</td>
+            <td style="font-weight:bold; color:#ff6b6b;">${qtdParaProduzir}</td>
+            <td>${reservadoBtn}</td>
+            <td style="font-weight:bold; color:#28a745;">${formatarMoedaPedido(valorEstoque)}</td>
+        </tr>`;
+    });
+}
+
+function abrirModalReserva(indexProduto){
+const p = produtos[indexProduto];
+if(!p) return;
+const reserva = obterReservaProduto(p);
+document.getElementById("modalReservaTitulo").innerText = `Reserva de Estoque: ${p.descricao}`;
+document.getElementById("modalReservaSubtitulo").innerText = `Código: ${p.codigo || '-'} | Unidade: ${p.unidade || 'UN'} | Total Reservado: ${reserva.qtdReservada}`;
+
+const container = document.getElementById("modalReservaTabela");
+if(!reserva.pedidosReservados.length){
+container.innerHTML = '<p class="estado-vazio">Nenhum pedido reservando este item no momento.</p>';
+} else {
+let htmlTable = `
+<table>
+<thead>
+<tr>
+<th>ID Pedido</th>
+<th>Cliente</th>
+<th>Status</th>
+<th>Data</th>
+<th>Qtd. Reservada</th>
+</tr>
+</thead>
+<tbody>`;
+reserva.pedidosReservados.forEach(item => {
+htmlTable += `
+<tr>
+<td>${escaparHTML(item.id || '-')}</td>
+<td>${escaparHTML(item.cliente || '-')}</td>
+<td><span style="background:#333; padding:3px 8px; border-radius:4px; border:1px solid #ffe200">${escaparHTML(item.status)}</span></td>
+<td>${escaparHTML(formatarDataPedido(item.data))}</td>
+<td style="font-weight:bold; color:#ffe200;">${item.quantidade}</td>
+</tr>`;
+});
+htmlTable += `</tbody></table>`;
+container.innerHTML = htmlTable;
+}
+
+document.getElementById("modalReserva").style.display = "flex";
+}
+
+function fecharModalReserva(){
+document.getElementById("modalReserva").style.display = "none";
+}
+
+function pesquisar(){
+let t=document.getElementById("pesquisa").value.toLowerCase();
+document.querySelectorAll("#listaProdutos tr").forEach(l=>l.style.display=l.innerText.toLowerCase().includes(t)?"":"none");
+}
+
+function carregarProdutosAcabados(){
+let select=document.getElementById("pproduto");
+if(!select) return;
+select.innerHTML='<option value="">Selecione produto acabado</option>';
+produtos.forEach((p,i)=>{
+if(p.categoria==="Produto acabado"){
+select.innerHTML += `<option value="${i}">${escaparHTML(p.codigo || "")} - ${escaparHTML(p.descricao || "")}</option>`;
+}
+});
+}
+
+function salvarProducao(){
+const indice=document.getElementById("pproduto").value;
+if(indice==="") return;
+const quantidade=Number(document.getElementById("pquantidade").value)||0;
+if(quantidade<=0){
+alert("Informe uma quantidade produzida maior que zero.");
+return;
+}
+produtos[indice].quantidade=(Number(produtos[indice].quantidade)||0)+quantidade;
+salvarLista("fg_produtos",produtos);
+
+producoes.push({
+codigo:produtos[indice].codigo,
+descricao:produtos[indice].descricao,
+quantidade:quantidade,
+data:new Date().toISOString()
+});
+salvarLista("fg_producoes",producoes);
+listarProdutos();
+listarEstoque();
+document.getElementById("pproduto").value="";
+document.getElementById("pquantidade").value="";
+alert("Produção lançada e estoque atualizado!");
+}
+
+function converterDataPedido(valor){
+if(!valor) return null;
+const texto=String(valor);
+const brasileira=texto.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+if(brasileira){
+return new Date(Number(brasileira[3]),Number(brasileira[2])-1,Number(brasileira[1]));
+}
+const data=new Date(texto);
+return Number.isNaN(data.getTime()) ? null : data;
+}
+
+function configurarAnosDashboard(){
+const select=document.getElementById("dashboardAno");
+if(!select) return;
+const valorAtual=select.value || "todos";
+const anos=[...new Set(lerLista("fg_pedidos")
+.map(p=>converterDataPedido(p.data))
+.filter(Boolean)
+.map(data=>data.getFullYear()))].sort((a,b)=>b-a);
+
+select.innerHTML='<option value="todos">Todos os anos</option>';
+anos.forEach(ano=>{
+select.innerHTML+=`<option value="${ano}">${ano}</option>`;
+});
+select.value=[...select.options].some(opcao=>opcao.value===valorAtual) ? valorAtual : "todos";
+}
+
+function atualizarDashboard(){
+const pedidos=lerLista("fg_pedidos");
+const mes=document.getElementById("dashboardMes")?.value || "todos";
+const ano=document.getElementById("dashboardAno")?.value || "todos";
+const statusFilter=document.getElementById("dashboardStatus")?.value || "todos";
+
+const filtrados=pedidos.filter(pedido=>{
+const data=converterDataPedido(pedido.data);
+const st = normalizarStatusPedido(pedido.status);
+if(statusFilter!=="todos" && st!==statusFilter) return false;
+if(mes==="todos" && ano==="todos") return true;
+if(!data) return false;
+if(mes!=="todos" && data.getMonth()!==Number(mes)) return false;
+if(ano!=="todos" && data.getFullYear()!==Number(ano)) return false;
+return true;
+});
+
+const total=filtrados.reduce((soma,pedido)=>soma+obterTotalPedido(pedido),0);
+document.getElementById("valorTotalPedidos").textContent=formatarMoedaPedido(total);
+document.getElementById("quantidadePedidos").textContent=
+filtrados.length+" "+(filtrados.length===1 ? "pedido" : "pedidos");
+desenharGraficoPedidos(filtrados);
+
+// Dashboard 2: Vendas por Estado
+atualizarDashboardEstados(filtrados);
+
+// Dashboard 3: Custo Total e Lucro Total
+atualizarDashboardCustoLucro(filtrados);
+}
+
+function atualizarDashboardEstados(pedidosFiltrados){
+const container = document.getElementById("dashboardEstadosTabela");
+if(!container) return;
+
+let totaisPorUF = {};
+let totalGeral = 0;
+
+pedidosFiltrados.forEach(pedido => {
+let uf = (pedido.estado || "").toUpperCase().trim();
+if(!uf && typeof clientes !== "undefined"){
+const cli = clientes.find(c => c.nome === pedido.cliente);
+if(cli && cli.estado) uf = cli.estado.toUpperCase().trim();
+}
+if(!uf) uf = "NÃO INFORMADO";
+
+const valor = obterTotalPedido(pedido);
+if(!totaisPorUF[uf]){
+totaisPorUF[uf] = { total: 0, quantidade: 0 };
+}
+totaisPorUF[uf].total += valor;
+totaisPorUF[uf].quantidade += 1;
+totalGeral += valor;
+});
+
+const ufsOrdenadas = Object.keys(totaisPorUF).sort((a, b) => totaisPorUF[b].total - totaisPorUF[a].total);
+
+if(!ufsOrdenadas.length){
+container.innerHTML = '<p class="estado-vazio">Nenhum pedido encontrado para a filtragem atual.</p>';
+return;
+}
+
+let tableHtml = `
+<table>
+<thead>
+<tr>
+<th>Estado (UF)</th>
+<th>Qtd. Pedidos</th>
+<th>Total em Vendas</th>
+<th>% do Total</th>
+</tr>
+</thead>
+<tbody>`;
+
+ufsOrdenadas.forEach(uf => {
+const dados = totaisPorUF[uf];
+const percentual = totalGeral > 0 ? ((dados.total / totalGeral) * 100).toFixed(1) : "0.0";
+tableHtml += `
+<tr>
+<td style="font-weight:bold; color:#ffe200;">${escaparHTML(uf)}</td>
+<td>${dados.quantidade}</td>
+<td style="font-weight:bold;">${formatarMoedaPedido(dados.total)}</td>
+<td>${percentual}%</td>
+</tr>`;
+});
+
+tableHtml += `</tbody></table>`;
+container.innerHTML = tableHtml;
+}
+
+function atualizarDashboardCustoLucro(pedidosFiltrados){
+let totalVendas = 0;
+let custoTotal = 0;
+
+pedidosFiltrados.forEach(pedido => {
+totalVendas += obterTotalPedido(pedido);
+const itens = normalizarItensPedido(pedido);
+itens.forEach(item => {
+const prod = produtos.find(p => p.descricao === item.produto || p.codigo === item.produto || (item.codigo && p.codigo === item.codigo));
+const custoUnit = prod ? (Number(prod.custo) || 0) : 0;
+custoTotal += (custoUnit * (Number(item.quantidade) || 0));
+});
+});
+
+const lucroTotal = totalVendas - custoTotal;
+const margem = totalVendas > 0 ? ((lucroTotal / totalVendas) * 100) : 0;
+
+document.getElementById("vendasTotalValor").textContent = formatarMoedaPedido(totalVendas);
+document.getElementById("custoTotalValor").textContent = formatarMoedaPedido(custoTotal);
+document.getElementById("lucroTotalValor").textContent = formatarMoedaPedido(lucroTotal);
+document.getElementById("margemLucroValor").textContent = margem.toFixed(1) + "%";
+document.getElementById("lucroTotalValor").style.color = lucroTotal >= 0 ? "#28a745" : "#ff5555";
+
+desenharGraficoCustoLucro(custoTotal, lucroTotal);
+}
+
+function desenharGraficoCustoLucro(custoTotal, lucroTotal){
+const canvas = document.getElementById("graficoCustoLucro");
+if(!canvas) return;
+const contexto = canvas.getContext("2d");
+const largura = Math.max(canvas.clientWidth || 800, 500);
+canvas.width = largura;
+canvas.height = 280;
+contexto.clearRect(0, 0, largura, 280);
+
+const valores = [Math.max(0, custoTotal), Math.max(0, lucroTotal)];
+const maior = Math.max(...valores, 1);
+const barWidth = 100;
+const gap = 80;
+const startX = (largura - (barWidth * 2 + gap)) / 2;
+
+contexto.font = "bold 13px Arial";
+contexto.textAlign = "center";
+
+// Bar 1: Custo Total
+const h1 = (valores[0] / maior) * 180;
+const x1 = startX;
+const y1 = 230 - h1;
+contexto.fillStyle = "#ff5555";
+contexto.fillRect(x1, y1, barWidth, h1);
+contexto.fillStyle = "#fff";
+contexto.fillText("Custo Total", x1 + barWidth/2, 255);
+contexto.fillText(formatarMoedaPedido(custoTotal), x1 + barWidth/2, y1 - 10);
+
+// Bar 2: Lucro Total
+const h2 = (valores[1] / maior) * 180;
+const x2 = startX + barWidth + gap;
+const y2 = 230 - h2;
+contexto.fillStyle = "#28a745";
+contexto.fillRect(x2, y2, barWidth, h2);
+contexto.fillStyle = "#fff";
+contexto.fillText("Lucro Total", x2 + barWidth/2, 255);
+contexto.fillText(formatarMoedaPedido(lucroTotal), x2 + barWidth/2, y2 - 10);
+}
+
+function desenharGraficoPedidos(pedidos){
+const canvas=document.getElementById("grafico");
+if(!canvas) return;
+const contexto=canvas.getContext("2d");
+const largura=Math.max(canvas.clientWidth || 900,600);
+canvas.width=largura;
+canvas.height=300;
+contexto.clearRect(0,0,largura,300);
+
+const totais=Array(12).fill(0);
+pedidos.forEach(pedido=>{
+const data=converterDataPedido(pedido.data);
+if(data) totais[data.getMonth()]+=obterTotalPedido(pedido);
+});
+
+const maior=Math.max(...totais);
+const meses=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const margem=40;
+const larguraUtil=largura-(margem*2);
+const larguraBarra=Math.max(14,(larguraUtil/12)-12);
+
+contexto.font="12px Arial";
+contexto.textAlign="center";
+if(maior===0){
+contexto.fillStyle="#aaa";
+contexto.fillText("Nenhum pedido com data para exibir no gráfico.",largura/2,145);
+}
+
+totais.forEach((total,i)=>{
+const altura=maior>0 ? (total/maior)*200 : 0;
+const x=margem+i*(larguraUtil/12)+6;
+const y=245-altura;
+contexto.fillStyle="#ffe200";
+contexto.fillRect(x,y,larguraBarra,altura);
+contexto.fillStyle="#fff";
+contexto.fillText(meses[i],x+larguraBarra/2,270);
+if(total>0){
+contexto.fillStyle="#fff";
+contexto.fillText("R$ "+Math.round(total).toLocaleString("pt-BR"),x+larguraBarra/2,y-8);
+}
+});
+}
+
+
+function carregarProdutosSaida(){
+let select=document.getElementById("produtoSaida");
+if(!select) return;
+select.innerHTML='<option value="">Selecione o produto</option>';
+produtos.forEach((p,i)=>{
+select.innerHTML += `<option value="${i}">${escaparHTML(p.codigo || "")} - ${escaparHTML(p.descricao || "")} (Estoque: ${Number(p.quantidade) || 0})</option>`;
+});
+}
+
+
+function baixarEstoque(){
+const indice=document.getElementById("produtoSaida").value;
+const qtd=Number(document.getElementById("quantidadeSaida").value)||0;
+const motivo=document.getElementById("motivoSaida").value.trim();
+const reduzReserva=document.getElementById("reduzirReserva").checked;
+
+if(indice===""){
+alert("Selecione um produto.");
+return;
+}
+if(qtd<=0){
+alert("Informe uma quantidade maior que zero.");
+return;
+}
+if(!motivo){
+alert("Informe o motivo da baixa.");
+return;
+}
+
+const atual=Number(produtos[indice].quantidade)||0;
+if(qtd>atual){
+    alert("A quantidade informada é maior que o estoque total.");
+    return;
+}
+
+produtos[indice].quantidade=atual-qtd;
+if(reduzReserva){
+    produtos[indice].reservaBaixada = (Number(produtos[indice].reservaBaixada) || 0) + qtd;
+}
+
+salvarLista("fg_produtos",produtos);
+
+baixasEstoque.push({
+    data: new Date().toLocaleDateString("pt-BR") + " " + new Date().toLocaleTimeString("pt-BR"),
+    produto: produtos[indice].descricao,
+    motivo: motivo,
+    quantidade: qtd
+});
+salvarLista("fg_baixas", baixasEstoque);
+
+listarEstoque();
+carregarProdutosSaida();
+listarBaixas();
+
+document.getElementById("produtoSaida").value="";
+document.getElementById("quantidadeSaida").value="";
+document.getElementById("motivoSaida").value="";
+document.getElementById("reduzirReserva").checked=false;
+
+alert("Estoque atualizado e baixa registrada!");
+}
+
+function listarBaixas(){
+const tabela = document.getElementById("listaBaixas");
+if(!tabela) return;
+tabela.innerHTML = "";
+if(!baixasEstoque.length){
+    tabela.innerHTML = '<tr><td colspan="4" class="estado-vazio">Nenhuma baixa registrada.</td></tr>';
+    return;
+}
+// Mostrar as mais recentes primeiro
+const baixasRev = [...baixasEstoque].reverse();
+baixasRev.forEach(b => {
+    tabela.innerHTML += `<tr>
+    <td>${escaparHTML(b.data)}</td>
+    <td>${escaparHTML(b.produto)}</td>
+    <td>${escaparHTML(b.motivo)}</td>
+    <td><span style="color:#ff5555; font-weight:bold;">-${b.quantidade}</span></td>
+    </tr>`;
+});
+}
+
+function pesquisarEstoque(){
+let t=document.getElementById("pesquisaEstoque").value.toLowerCase();
+document.querySelectorAll("#listaEstoque tr").forEach(l=>l.style.display=l.innerText.toLowerCase().includes(t)?"":"none");
+}
+
+
+
+function carregarProdutosCompra(){
+let select=document.getElementById("produtoCompra");
+if(!select) return;
+select.innerHTML='<option value="">Selecione o produto</option>';
+produtos.forEach((p,i)=>{
+select.innerHTML += `<option value="${i}">${escaparHTML(p.codigo || "")} - ${escaparHTML(p.descricao || "")}</option>`;
+});
+}
+
+
+function salvarCompra(){
+const indice=document.getElementById("produtoCompra").value;
+const preco=lerMoeda(document.getElementById("precoCompra").value);
+const quantidade=Number(document.getElementById("quantidadeCompra").value) || 0;
+
+if(indice===""){
+alert("Selecione um produto.");
+return;
+}
+if(preco<=0 || quantidade<=0){
+alert("Informe preço e quantidade maiores que zero.");
+return;
+}
+
+produtos[indice].precoCompra=preco;
+produtos[indice].custo=preco;
+produtos[indice].quantidade=(Number(produtos[indice].quantidade)||0)+quantidade;
+
+salvarLista("fg_produtos",produtos);
+
+compras.push({
+codigo:produtos[indice].codigo,
+descricao:produtos[indice].descricao,
+preco:preco,
+quantidade:quantidade
+});
+
+salvarLista("fg_compras",compras);
+
+listarEstoque();
+listarCompras();
+
+document.getElementById("produtoCompra").value="";
+document.getElementById("precoCompra").value="";
+document.getElementById("quantidadeCompra").value="";
+
+alert("Compra lançada e estoque atualizado!");
+}
+
+
+function formatarMoeda(campo){
+const valor=String(campo.value || "").replace(/\D/g,"");
+if(valor===""){
+campo.value="";
+return;
+}
+campo.value="R$ "+(Number(valor)/100).toFixed(2).replace(".",",");
+}
+
+function lerMoeda(valor){
+const texto=String(valor || "").trim();
+if(!texto) return 0;
+if(texto.includes(",")){
+return Number(texto.replace(/[R$\s.]/g,"").replace(",",".")) || 0;
+}
+return Number(texto.replace(/[R$\s]/g,"")) || 0;
+}
+
+function listarCompras(){
+let tabela=document.getElementById("listaCompras");
+if(!tabela) return;
+tabela.innerHTML="";
+
+if(!compras.length){
+tabela.innerHTML='<tr><td colspan="4" class="estado-vazio">Nenhuma compra lançada.</td></tr>';
+return;
+}
+
+compras.forEach(c=>{
+tabela.innerHTML += `
+<tr>
+<td>${escaparHTML(c.codigo || "")}</td>
+<td>${escaparHTML(c.descricao || "")}</td>
+<td>${formatarMoedaPedido(c.preco)}</td>
+<td>${Number(c.quantidade) || 0}</td>
+</tr>`;
+});
+}
+
+function novoCliente(){
+clienteEditando=-1;
+cancelarCliente();
+document.getElementById("cadastroCliente").style.display="block";
+}
+
+function cancelarCliente(){
+document.getElementById("cadastroCliente").style.display="none";
+document.querySelectorAll("#cadastroCliente input").forEach(i=>i.value="");
+clienteEditando=-1;
+}
+
+function listarClientes(){
+let tabela=document.getElementById("listaClientes");
+if(!tabela)return;
+tabela.innerHTML="";
+
+if(!clientes.length){
+tabela.innerHTML='<tr><td colspan="5" class="estado-vazio">Nenhum cliente cadastrado.</td></tr>';
+return;
+}
+
+clientes.forEach((c,i)=>{
+tabela.innerHTML+=`
+<tr>
+<td>${escaparHTML(c.documento || "")}</td>
+<td>${escaparHTML(c.nome || "")}</td>
+<td>${escaparHTML(c.estado || "")}</td>
+<td>${escaparHTML(c.cidade || "")}</td>
+<td><button class="btn btn-acao" onclick="editarCliente(${i})">✏ Editar</button></td>
+</tr>`;
+});
+}
+
+function pesquisarCliente(){
+let texto=document.getElementById("pesquisaCliente").value.toLowerCase();
+document.querySelectorAll("#listaClientes tr").forEach(linha=>{
+linha.style.display =
+linha.innerText.toLowerCase().includes(texto) ? "" : "none";
+});
+}
+
+function editarCliente(i){
+const cliente=clientes[i];
+if(!cliente) return;
+clienteEditando=i;
+const campos={
+clienteDocumento:"documento",
+clienteNome:"nome",
+clienteFantasia:"fantasia",
+clienteTelefone:"telefone",
+clienteEmail:"email",
+clienteCep:"cep",
+clienteEndereco:"endereco",
+clienteNumero:"numero",
+clienteComplemento:"complemento",
+clienteBairro:"bairro",
+clienteCidade:"cidade",
+clienteEstado:"estado",
+clienteContato:"contato"
+};
+Object.entries(campos).forEach(([id,chave])=>{
+document.getElementById(id).value=cliente[chave] || "";
+});
+document.getElementById("cadastroCliente").style.display="block";
+}
+
+
+function excluirProduto(i){
+let produto = produtos[i];
+if(!produto) return;
+if(confirm("Excluir o produto: " + produto.descricao + "?")){
+produtos.splice(i,1);
+salvarLista("fg_produtos",produtos);
+
+listarProdutos();
+listarEstoque();
+carregarProdutosCompra();
+carregarProdutosSaida();
+carregarProdutosAcabados();
+}
+}
+
+async function consultarCNPJ(){
+let cnpj=document.getElementById("clienteDocumento").value.replace(/\D/g,'');
+if(cnpj.length!==14){
+alert("Informe um CNPJ válido com 14 números.");
+return;
+}
+try{
+let resposta=await fetch("https://brasilapi.com.br/api/cnpj/v1/"+cnpj);
+if(!resposta.ok){
+throw new Error();
+}
+let dados=await resposta.json();
+
+document.getElementById("clienteNome").value=dados.razao_social || "";
+document.getElementById("clienteFantasia").value=dados.nome_fantasia || "";
+document.getElementById("clienteTelefone").value=dados.ddd_telefone_1 || "";
+document.getElementById("clienteEmail").value=dados.email || "";
+document.getElementById("clienteCep").value=dados.cep || "";
+document.getElementById("clienteEndereco").value=dados.logradouro || "";
+document.getElementById("clienteNumero").value=dados.numero || "";
+document.getElementById("clienteBairro").value=dados.bairro || "";
+document.getElementById("clienteCidade").value=dados.municipio || "";
+document.getElementById("clienteEstado").value=dados.uf || "";
+
+alert("Dados do CNPJ preenchidos.");
+}catch(e){
+alert("Não foi possível consultar este CNPJ.");
+}
+}
+
+
+function salvarCliente(){
+const c={
+documento:document.getElementById("clienteDocumento").value.trim(),
+nome:document.getElementById("clienteNome").value.trim(),
+fantasia:document.getElementById("clienteFantasia").value.trim(),
+telefone:document.getElementById("clienteTelefone").value.trim(),
+email:document.getElementById("clienteEmail").value.trim(),
+cep:document.getElementById("clienteCep").value.trim(),
+endereco:document.getElementById("clienteEndereco").value.trim(),
+numero:document.getElementById("clienteNumero").value.trim(),
+complemento:document.getElementById("clienteComplemento").value.trim(),
+bairro:document.getElementById("clienteBairro").value.trim(),
+cidade:document.getElementById("clienteCidade").value.trim(),
+estado:document.getElementById("clienteEstado").value.trim().toUpperCase(),
+contato:document.getElementById("clienteContato").value.trim()
+};
+
+if(!c.nome){
+alert("Informe o nome ou a razão social do cliente.");
+return;
+}
+
+if(clienteEditando >= 0){
+const nomeAnterior=clientes[clienteEditando]?.nome;
+clientes[clienteEditando]=c;
+
+if(nomeAnterior && nomeAnterior!==c.nome){
+const pedidos=lerLista("fg_pedidos");
+pedidos.forEach(pedido=>{
+if(pedido.cliente===nomeAnterior){
+pedido.cliente=c.nome;
+pedido.estado=c.estado;
+}
+});
+salvarLista("fg_pedidos",pedidos);
+}
+}else{
+clientes.push(c);
+}
+
+salvarLista("fg_clientes",clientes);
+listarClientes();
+cancelarCliente();
+}
+
+function listarPedidosCadastrados(){
+let tabela=document.getElementById("listaPedidosCadastrados");
+if(!tabela)return;
+tabela.innerHTML="";
+
+let pedidosCadastrados = window._pedidosCache || lerLista("fg_pedidos");
+if (typeof situacaoAtualFiltro !== 'undefined' && situacaoAtualFiltro !== 'todos') {
+    pedidosCadastrados = pedidosCadastrados.filter(p => (p.status || 'Orçamento') === situacaoAtualFiltro);
+}
+
+if(!pedidosCadastrados.length){
+tabela.innerHTML='<tr><td colspan="7" class="estado-vazio">Nenhum pedido cadastrado.</td></tr>';
+return;
+}
+
+pedidosCadastrados.forEach((p,index)=>{
+let estado=p.estado || "";
+if(typeof clientes!="undefined"){
+let cli=clientes.find(c=>c.nome===p.cliente);
+if(cli){
+estado=cli.estado || "";
+}
+}
+
+const statusNormalizado = normalizarStatusPedido(p.status);
+
+tabela.innerHTML+=`
+<tr>
+<td>${escaparHTML(p.id || "")}</td>
+<td>${escaparHTML(formatarDataPedido(p.data))}</td>
+<td>${escaparHTML(statusNormalizado)}</td>
+<td>${escaparHTML(p.cliente || "")}</td>
+<td>${escaparHTML(estado)}</td>
+<td>${formatarMoedaPedido(obterTotalPedido(p))}</td>
+<td>
+<div class="acoes-pedido">
+<button class="btn btn-acao" onclick="editarPedidoCadastrado(${index})">✏ Editar</button>
+<button class="btn btn-acao btn-pdf" onclick="gerarPDFPedido(${index})">📄 PDF</button>
+</div>
+</td>
+</tr>`;
+});
+}
+</script>
+
+
+<script>
+let itensPedidoNovo=[];
+let clientePedidoSelecionado=null;
+let pedidoEditandoId=null;
+
+function gerarIdPedido(){
+const pedidos=lerLista("fg_pedidos");
+const maiorNosPedidos=pedidos.reduce((maior,pedido)=>Math.max(maior,Number(pedido.id)||0),0);
+const ultimoSalvo=Number(localStorage.getItem("ultimoIdPedido")) || 0;
+return Math.max(maiorNosPedidos,ultimoSalvo)+1;
+}
+
+function abrirNovoPedido(){
+pedidoEditandoId=null;
+itensPedidoNovo=[];
+clientePedidoSelecionado=null;
+document.getElementById("tituloFormPedido").textContent="Novo Pedido";
+document.getElementById("btnSalvarPedido").textContent="SALVAR PEDIDO";
+document.getElementById("idPedido").value=gerarIdPedido();
+document.getElementById("statusPedido").value="Orçamento";
+document.getElementById("pagamentoPedido").value="Antecipado";
+document.getElementById("observacaoPedido").value="";
+document.getElementById("quantidadePedido").value="";
+document.getElementById("valorUnitarioPedido").value="";
+document.getElementById("fretePedido").value="";
+preencherClientesPedido();
+preencherProdutosPedido();
+mostrarItensPedido();
+document.getElementById("formNovoPedido").style.display="block";
+}
+
+function preencherClientesPedido(nomeSelecionado=""){
+const select=document.getElementById("clientePedido");
+select.innerHTML='<option value="">Selecionar cliente</option>';
+clientes.forEach((cliente,i)=>{
+select.innerHTML+=`<option value="${i}">${escaparHTML(cliente.nome || "")}</option>`;
+});
+if(nomeSelecionado){
+const indice=clientes.findIndex(cliente=>cliente.nome===nomeSelecionado);
+if(indice>=0) select.value=String(indice);
+}
+selecionarClientePedido();
+}
+
+function preencherProdutosPedido(){
+const select=document.getElementById("produtoPedido");
+select.innerHTML='<option value="">Selecionar produto</option>';
+produtos.forEach((produto,i)=>{
+const un = produto.unidade ? ` (${escaparHTML(produto.unidade)})` : "";
+select.innerHTML+=`<option value="${i}">${escaparHTML(produto.codigo || "")} - ${escaparHTML(produto.descricao || "")}${un}</option>`;
+});
+}
+
+function selecionarClientePedido(){
+const indice=document.getElementById("clientePedido").value;
+clientePedidoSelecionado=indice==="" ? null : clientes[Number(indice)] || null;
+}
+
+function incluirItemPedido(){
+const i=document.getElementById("produtoPedido").value;
+const qtd=Number(document.getElementById("quantidadePedido").value)||0;
+const valor=lerMoeda(document.getElementById("valorUnitarioPedido").value);
+
+if(i===""){
+alert("Selecione um produto.");
+return;
+}
+if(qtd<=0 || valor<=0){
+alert("Informe quantidade e valor unitário maiores que zero.");
+return;
+}
+
+if (itemPedidoEditandoIndex >= 0) {
+        // Se estiver editando, atualiza o item existente
+        itensPedidoNovo[itemPedidoEditandoIndex] = {
+            produto: produtos[i].descricao || "Item",
+            codigo: produtos[i].codigo || "",
+            unidade: produtos[i].unidade || "UN",
+            quantidade: qtd,
+            valor: valor
+        };
+        // Reseta o índice de edição
+        itemPedidoEditandoIndex = -1;
+        
+        // Volta o texto do botão ao normal
+        const btnIncluir = document.querySelector("#formNovoPedido button[onclick='incluirItemPedido()']");
+        if(btnIncluir) btnIncluir.innerText = "INCLUIR ITEM";
+    } else {
+        // Se for um item novo, adiciona normalmente
+        itensPedidoNovo.push({
+            produto: produtos[i].descricao || "Item",
+            codigo: produtos[i].codigo || "",
+            unidade: produtos[i].unidade || "UN",
+            quantidade: qtd,
+            valor: valor
+        });
+    }
+
+mostrarItensPedido();
+document.getElementById("produtoPedido").value="";
+document.getElementById("quantidadePedido").value="";
+document.getElementById("valorUnitarioPedido").value="";
+}
+
+function recalcularTotalFormPedido(){
+mostrarItensPedido();
+}
+
+function mostrarItensPedido(){
+const tabela=document.getElementById("itensPedido");
+let totalItens=0;
+tabela.innerHTML="";
+
+if(!itensPedidoNovo.length){
+tabela.innerHTML='<tr><td colspan="6" class="estado-vazio">Nenhum item incluído.</td></tr>';
+}
+
+itensPedidoNovo.forEach((item,index)=>{
+const subtotal=(Number(item.quantidade)||0)*(Number(item.valor)||0);
+totalItens+=subtotal;
+tabela.innerHTML+=`
+<tr>
+<td>${escaparHTML(item.produto || "Item")}</td>
+<td>${escaparHTML(item.unidade || "UN")}</td>
+<td>${Number(item.quantidade)||0}</td>
+<td>${formatarMoedaPedido(item.valor)}</td>
+<td>${formatarMoedaPedido(subtotal)}</td>
+<td>
+    <button class="btn btn-acao" onclick="editarItemPedido(${index})" style="margin-right: 5px;">Editar</button>
+    <button class="btn btn-acao btn-excluir" onclick="removerItemPedido(${index})">Remover</button>
+</td>
+</tr>`;
+});
+
+const frete = lerMoeda(document.getElementById("fretePedido")?.value);
+const totalGeral = totalItens + frete;
+
+if (frete > 0) {
+document.getElementById("totalPedido").innerText=`Subtotal Itens: ${formatarMoedaPedido(totalItens)} | Frete: ${formatarMoedaPedido(frete)} | Total Geral: ${formatarMoedaPedido(totalGeral)}`;
+} else {
+document.getElementById("totalPedido").innerText="Total: "+formatarMoedaPedido(totalGeral);
+}
+}
+
+function removerItemPedido(index){
+itensPedidoNovo.splice(index,1);
+mostrarItensPedido();
+}
+
+function cancelarNovoPedido(){
+itensPedidoNovo=[];
+clientePedidoSelecionado=null;
+pedidoEditandoId=null;
+document.getElementById("clientePedido").value="";
+document.getElementById("produtoPedido").value="";
+document.getElementById("quantidadePedido").value="";
+document.getElementById("valorUnitarioPedido").value="";
+document.getElementById("fretePedido").value="";
+document.getElementById("observacaoPedido").value="";
+document.getElementById("tituloFormPedido").textContent="Novo Pedido";
+document.getElementById("btnSalvarPedido").textContent="SALVAR PEDIDO";
+mostrarItensPedido();
+document.getElementById("formNovoPedido").style.display="none";
+}
+
+function salvarNovoPedido(){
+selecionarClientePedido();
+if(!clientePedidoSelecionado){
+alert("Selecione um cliente.");
+return;
+}
+if(itensPedidoNovo.length===0){
+alert("Inclua pelo menos um item.");
+return;
+}
+
+const pedidos=lerLista("fg_pedidos");
+const totalItens=itensPedidoNovo.reduce((soma,item)=>{
+return soma+(Number(item.quantidade)||0)*(Number(item.valor)||0);
+},0);
+const frete = lerMoeda(document.getElementById("fretePedido").value);
+const totalGeral = totalItens + frete;
+
+const existente=pedidoEditandoId!==null ? pedidos[pedidoEditandoId] : null;
+const id=existente?.id || Number(document.getElementById("idPedido").value) || gerarIdPedido();
+const pedido = {
+...existente,
+id:id,
+data:existente?.data || new Date().toLocaleDateString("pt-BR"),
+cliente: clientePedidoSelecionado.nome,
+estado: clientePedidoSelecionado.estado || "",
+status: normalizarStatusPedido(document.getElementById("statusPedido").value),
+pagamento: document.getElementById("pagamentoPedido").value,
+observacao: document.getElementById("observacaoPedido").value.trim(),
+itens: itensPedidoNovo.map(item=>({...item})),
+frete: frete,
+total: totalGeral
+};
+
+if(pedidoEditandoId!==null){
+pedidos[pedidoEditandoId]=pedido;
+}else{
+pedidos.push(pedido);
+localStorage.setItem("ultimoIdPedido",String(id));
+}
+
+salvarLista("fg_pedidos",pedidos);
+listarPedidosCadastrados();
+listarEstoque();
+configurarAnosDashboard();
+atualizarDashboard();
+alert(pedidoEditandoId!==null ? "Pedido atualizado com sucesso!" : "Pedido salvo com sucesso!");
+cancelarNovoPedido();
+}
+
+function editarPedidoCadastrado(index){
+const pedidos=lerLista("fg_pedidos");
+const pedido=pedidos[index];
+if(!pedido) return;
+
+pedidoEditandoId=index;
+document.getElementById("tituloFormPedido").textContent="Editar Pedido";
+document.getElementById("btnSalvarPedido").textContent="SALVAR ALTERAÇÕES";
+document.getElementById("idPedido").value=pedido.id || "";
+document.getElementById("statusPedido").value=normalizarStatusPedido(pedido.status);
+document.getElementById("pagamentoPedido").value=pedido.pagamento || "Antecipado";
+document.getElementById("observacaoPedido").value=pedido.observacao || "";
+document.getElementById("quantidadePedido").value="";
+document.getElementById("valorUnitarioPedido").value="";
+document.getElementById("fretePedido").value=pedido.frete ? formatarMoedaPedido(pedido.frete) : "";
+preencherClientesPedido(pedido.cliente || "");
+preencherProdutosPedido();
+itensPedidoNovo=normalizarItensPedido(pedido);
+mostrarItensPedido();
+document.getElementById("formNovoPedido").style.display="block";
+}
+
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+    listarProdutos();
+    listarEstoque();
+    listarCompras();
+    listarClientes();
+    listarPedidosCadastrados();
+    configurarAnosDashboard();
+    atualizarDashboard();
+});
+</script>
+
+<script>
+function escaparHTML(valor){
+    const mapa = {
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+    };
+
+    return String(valor ?? "").replace(/[&<>"']/g, function(caractere){
+        return mapa[caractere];
+    });
+}
+
+function formatarMoedaPedido(valor){
+    return new Intl.NumberFormat("pt-BR", {
+        style:"currency",
+        currency:"BRL"
+    }).format(Number(valor) || 0);
+}
+
+function formatarDataPedido(valor){
+    if(!valor) return "Não informada";
+
+    const texto = String(valor);
+    if(/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) return texto;
+
+    const data = new Date(texto);
+    if(!Number.isNaN(data.getTime())){
+        return data.toLocaleDateString("pt-BR");
+    }
+
+    return texto;
+}
+
+function obterTotalPedido(pedido){
+    const subtotal = normalizarItensPedido(pedido).reduce(function(soma,item){
+        return soma+(item.quantidade*item.valor);
+    },0);
+    const frete = lerMoeda(pedido.frete ?? 0);
+    if (subtotal > 0 || frete > 0) {
+        return subtotal + frete;
+    }
+    const totalInformado = lerMoeda(pedido.total ?? pedido.valorTotal);
+    return totalInformado;
+}
+
+function normalizarItensPedido(pedido){
+    if(Array.isArray(pedido.itens) && pedido.itens.length){
+        return pedido.itens.map(function(item){
+            let un = item.unidade || item.un;
+            if(!un && typeof produtos !== 'undefined'){
+                let pEncontrado = produtos.find(p => p.descricao === item.produto || p.codigo === item.codigo);
+                if(pEncontrado) un = pEncontrado.unidade;
+            }
+            return {
+                produto:item.produto || item.descricao || "Item",
+                codigo:item.codigo || "",
+                unidade: un || "UN",
+                quantidade:Number(item.quantidade) || 0,
+                valor:lerMoeda(item.valor ?? item.preco)
+            };
+        });
+    }
+
+    if(pedido.produto){
+        let un = pedido.unidade;
+        if(!un && typeof produtos !== 'undefined'){
+            let pEncontrado = produtos.find(p => p.descricao === pedido.produto || p.codigo === pedido.codigo);
+            if(pEncontrado) un = pEncontrado.unidade;
+        }
+        return [{
+            produto:pedido.produto,
+            codigo:pedido.codigo || "",
+            unidade: un || "UN",
+            quantidade:Number(pedido.quantidade) || 0,
+            valor:lerMoeda(pedido.preco)
+        }];
+    }
+
+    return [];
+}
+
+function gerarPDFPedido(index){
+    const pedidos = JSON.parse(localStorage.getItem("fg_pedidos")) || [];
+    const pedido = pedidos[index];
+
+    if(!pedido){
+        alert("Pedido não encontrado.");
+        return;
+    }
+
+    const clientesSalvos = JSON.parse(localStorage.getItem("fg_clientes")) || [];
+    const cliente = clientesSalvos.find(function(c){
+        return c.nome === pedido.cliente;
+    }) || {};
+
+    const itens = normalizarItensPedido(pedido);
+    const frete = lerMoeda(pedido.frete ?? 0);
+    const subtotalItens = itens.reduce(function(s, item){ return s + (item.quantidade * item.valor); }, 0);
+    const totalPedido = subtotalItens + frete;
+
+    const endereco = [
+        cliente.endereco,
+        cliente.numero,
+        cliente.complemento,
+        cliente.bairro,
+        cliente.cidade,
+        cliente.estado || pedido.estado,
+        cliente.cep ? "CEP " + cliente.cep : ""
+    ].filter(Boolean).join(", ");
+
+    const linhasItens = itens.length ? itens.map(function(item,indexItem){
+        const subtotal = item.quantidade * item.valor;
+        return `
+        <tr>
+            <td>${indexItem + 1}</td>
+            <td class="texto-esquerda">${escaparHTML(item.produto)}</td>
+            <td>${escaparHTML(item.unidade || "UN")}</td>
+            <td>${escaparHTML(item.quantidade)}</td>
+            <td>${formatarMoedaPedido(item.valor)}</td>
+            <td>${formatarMoedaPedido(subtotal)}</td>
+        </tr>`;
+    }).join("") : `
+        <tr><td colspan="6">Nenhum item cadastrado.</td></tr>`;
+
+    const numeroPedido = escaparHTML(pedido.id || "-");
+    const emitidoEm = new Date().toLocaleString("pt-BR");
+    const janela = window.open("", "_blank", "width=1000,height=800");
+
+    if(!janela){
+        alert("O navegador bloqueou a janela do PDF. Permita pop-ups para este arquivo e tente novamente.");
+        return;
+    }
+
+    janela.document.open();
+    janela.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Pedido ${numeroPedido} - FG Acessórios</title>
+<style>
+    *{box-sizing:border-box}
+    body{font-family:Arial,sans-serif;color:#171717;margin:0;background:#ececec}
+    .barra{position:sticky;top:0;background:#171717;color:#fff;padding:12px 18px;text-align:center}
+    .barra button{border:0;border-radius:6px;padding:10px 16px;margin:0 5px;font-weight:bold;cursor:pointer}
+    .salvar{background:#ffe200;color:#000}
+    .fechar{background:#fff;color:#111}
+    .pagina{width:210mm;min-height:297mm;margin:18px auto;background:#fff;padding:16mm;box-shadow:0 2px 14px rgba(0,0,0,.18)}
+    .cabecalho{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:4px solid #ffe200;padding-bottom:14px;margin-bottom:18px}
+    .marca{font-size:26px;font-weight:800;letter-spacing:.5px}
+    .marca span{background:#ffe200;padding:3px 7px}
+    .pedido-numero{text-align:right}
+    .pedido-numero strong{font-size:22px}
+    .pedido-numero small{display:block;margin-top:5px;color:#555}
+    .titulo-bloco{background:#171717;color:#fff;padding:7px 10px;font-size:13px;text-transform:uppercase;margin:18px 0 0}
+    .dados{border:1px solid #ccc;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:7px 24px;font-size:13px}
+    .dados .linha-inteira{grid-column:1 / -1}
+    table{width:100%;border-collapse:collapse;margin-top:0;font-size:13px}
+    th{background:#ffe200;color:#111;padding:9px 7px;border:1px solid #aaa}
+    td{padding:9px 7px;border:1px solid #bbb;text-align:center}
+    .texto-esquerda{text-align:left}
+    .resumo{margin:16px 0 0 auto;width:340px;border-collapse:collapse}
+    .resumo td{font-size:14px}
+    .resumo .total{font-size:18px;font-weight:bold;background:#ffe200;color:#111}
+    .observacao{border:1px solid #ccc;min-height:75px;padding:12px;white-space:pre-wrap;font-size:13px}
+    .rodape{margin-top:30px;padding-top:10px;border-top:1px solid #ccc;text-align:center;color:#666;font-size:11px}
+    @page{size:A4;margin:12mm}
+    @media print{
+        body{background:#fff}
+        .barra{display:none}
+        .pagina{width:auto;min-height:auto;margin:0;padding:0;box-shadow:none}
+    }
+</style>
+</head>
+<body>
+<div class="barra">
+    Para criar o arquivo, escolha <strong>Salvar como PDF</strong> na tela de impressão.
+    <button class="salvar" onclick="window.print()">SALVAR / IMPRIMIR PDF</button>
+    <button class="fechar" onclick="window.close()">FECHAR</button>
+</div>
+<main class="pagina">
+    <header class="cabecalho" style="align-items:center;">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <img src="data:image/png;base64,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" alt="Logo FG" style="max-height:90px;">
+            <div style="font-size:11px; color:#555; line-height:1.4;">
+                <strong>CNPJ:</strong> 61.089.464/0001-00<br>
+                <strong>TELEFONE:</strong> (048) 99954-3821<br>
+                <strong>E-MAIL:</strong> fgacessoriossc@gmail.com<br>
+                <strong>SITE:</strong> www.fgacessorios.com<br>
+                <strong>CIDADE:</strong> URUSSANGA - SC
+            </div>
+        </div>
+        <div class="pedido-numero">
+            <strong>PEDIDO Nº ${numeroPedido}</strong>
+            <small>Data do pedido: ${escaparHTML(formatarDataPedido(pedido.data))}</small>
+        </div>
+    </header>
+
+    <div class="titulo-bloco">Dados do cliente</div>
+    <section class="dados">
+        <div><strong>Cliente:</strong> ${escaparHTML(pedido.cliente || cliente.nome || "Não informado")}</div>
+        <div><strong>CPF/CNPJ:</strong> ${escaparHTML(cliente.documento || "Não informado")}</div>
+        <div><strong>Telefone:</strong> ${escaparHTML(cliente.telefone || "Não informado")}</div>
+        <div><strong>E-mail:</strong> ${escaparHTML(cliente.email || "Não informado")}</div>
+        <div class="linha-inteira"><strong>Endereço:</strong> ${escaparHTML(endereco || "Não informado")}</div>
+    </section>
+
+    <div class="titulo-bloco">Itens do pedido</div>
+    <table>
+        <thead>
+            <tr><th>Item</th><th>Produto</th><th>Unidade</th><th>Qtd.</th><th>Valor unitário</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody>${linhasItens}</tbody>
+    </table>
+
+    <table class="resumo">
+        <tr><td><strong>Status</strong></td><td>${escaparHTML(normalizarStatusPedido(pedido.status))}</td></tr>
+        <tr><td><strong>Pagamento</strong></td><td>${escaparHTML(pedido.pagamento || "Não informado")}</td></tr>
+        <tr><td><strong>Subtotal Produtos</strong></td><td>${formatarMoedaPedido(subtotalItens)}</td></tr>
+        <tr><td><strong>Valor do Frete</strong></td><td>${formatarMoedaPedido(frete)}</td></tr>
+        <tr class="total"><td>TOTAL DO PEDIDO</td><td>${formatarMoedaPedido(totalPedido)}</td></tr>
+    </table>
+
+    <div class="titulo-bloco">Observações</div>
+    <div class="observacao">${escaparHTML(pedido.observacao || "Sem observações.")}</div>
+
+    <footer class="rodape">Documento gerado pelo FG Acessórios ERP em ${escaparHTML(emitidoEm)}.</footer>
+</main>
+</body>
+</html>`);
+    janela.document.close();
+
+    janela.focus();
+    setTimeout(function(){
+        janela.print();
+    },350);
+}
+</script>
+<script>
+// Conexão com o Supabase
+const SUPABASE_URL = 'https://jeimoojlhrssdaevmazx.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplaW1vb2psaHJzc2RhZXZtYXp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0NjY0NTgsImV4cCI6MjEwNTA0MjQ1OH0.8Z8B9mz0l6kb-1Y3byjEwX60k-Kkd8v0OyZakvJ7Yu8';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let _dadosCache = {
+    produtos: [],
+    baixas: [],
+    producoes: [],
+    compras: [],
+    clientes: [],
+    pedidos: []
+};
+
+function obterNomeTabela(chave){
+    if(chave.includes('produtos')) return 'produtos';
+    if(chave.includes('baixas')) return 'baixas';
+    if(chave.includes('producoes')) return 'producoes';
+    if(chave.includes('compras')) return 'compras';
+    if(chave.includes('clientes')) return 'clientes';
+    if(chave.includes('pedidos')) return 'pedidos';
+    return chave;
+}
+
+function lerLista(chave){
+    if(chave.includes('produtos')) return produtos;
+    if(chave.includes('baixas')) return baixasEstoque;
+    if(chave.includes('producoes')) return producoes;
+    if(chave.includes('compras')) return compras;
+    if(chave.includes('clientes')) return clientes;
+    if(chave.includes('pedidos')) return window._pedidosCache || [];
+    return [];
+}
+
+async function carregarDadosSupabase(){
+    try {
+        const pRes = await supabaseClient.from('produtos').select('*');
+        if(!pRes.error && pRes.data) produtos = pRes.data || [];
+
+        const bRes = await supabaseClient.from('baixas').select('*');
+        if(!bRes.error && bRes.data) baixasEstoque = bRes.data || [];
+
+        const prRes = await supabaseClient.from('producoes').select('*');
+        if(!prRes.error && prRes.data) producoes = prRes.data || [];
+
+        const cRes = await supabaseClient.from('compras').select('*');
+        if(!cRes.error && cRes.data) compras = cRes.data || [];
+
+        const cliRes = await supabaseClient.from('clientes').select('*');
+        if(!cliRes.error && cliRes.data) clientes = cliRes.data || [];
+
+        const pedRes = await supabaseClient.from('pedidos').select('*');
+        if(!pedRes.error && pedRes.data) window._pedidosCache = pedRes.data || [];
+
+        // Atualiza a tela com os dados recém-baixados da nuvem
+        if(typeof listarProdutos === 'function') listarProdutos();
+        if(typeof listarEstoque === 'function') listarEstoque();
+        if(typeof listarClientes === 'function') listarClientes();
+        if(typeof listarPedidosCadastrados === 'function') listarPedidosCadastrados();
+        if(typeof atualizarDashboard === 'function') atualizarDashboard();
+        if(typeof configurarAnosDashboard === 'function') configurarAnosDashboard();
+        
+        console.log("Dados carregados com sucesso do Supabase!");
+    } catch(err) {
+        console.error("Erro ao carregar do Supabase:", err);
+    }
+}
+
+async function salvarLista(chave, lista){
+    const nomeTabela = obterNomeTabela(chave);
+    
+    if(chave.includes('produtos')) produtos = lista;
+    else if(chave.includes('baixas')) baixasEstoque = lista;
+    else if(chave.includes('producoes')) producoes = lista;
+    else if(chave.includes('compras')) compras = lista;
+    else if(chave.includes('clientes')) clientes = lista;
+    else if(chave.includes('pedidos')) window._pedidosCache = lista;
+
+    try { localStorage.setItem(chave, JSON.stringify(lista)); } catch(e){}
+
+    try {
+        await supabaseClient.from(nomeTabela).delete().neq('id', 0);
+        
+        if(lista && lista.length > 0){
+            // Remove o ID local para permitir que o Supabase gere os IDs sequenciais corretos sem conflito
+            const dadosLimpos = lista.map(item => {
+                const copia = {...item};
+                delete copia.id; // Deixa o Supabase gerenciar o ID automaticamente
+                return copia;
+            });
+
+            const { error } = await supabaseClient.from(nomeTabela).insert(dadosLimpos);
+            if(error) {
+                console.error("Erro ao inserir no Supabase (" + nomeTabela + "):", error.message);
+            }
+        }
+    } catch(err) {
+        console.error("Erro ao salvar no Supabase (" + nomeTabela + "):", err);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async function(){
+    await carregarDadosSupabase();
+});
+
+let situacaoAtualFiltro = 'todos';
+
+function filtrarPedidos(situacao) {
+    situacaoAtualFiltro = situacao;
+    
+    document.querySelectorAll('.filtros-pedidos button').forEach(btn => {
+        btn.style.backgroundColor = '';
+        btn.style.color = '';
+    });
+    if(event && event.target) {
+        event.target.style.backgroundColor = '#ffe200';
+        event.target.style.color = '#111';
+    }
+
+    if(typeof listarPedidosCadastrados === 'function') {
+        listarPedidosCadastrados();
+    }
+}
+
+let itemPedidoEditandoIndex = -1;
+
+function editarItemPedido(index) {
+    const item = itensPedidoNovo[index];
+    if(!item) return;
+
+    itemPedidoEditandoIndex = index;
+
+    const indexProduto = produtos.findIndex(p => p.descricao === item.produto || p.codigo === item.codigo);
+    if(indexProduto !== -1) {
+        document.getElementById("produtoPedido").value = indexProduto;
+    }
+    
+    document.getElementById("quantidadePedido").value = item.quantidade;
+    document.getElementById("valorUnitarioPedido").value = formatarMoedaPedido(item.valor);
+
+    const btnIncluir = document.querySelector("#formNovoPedido button[onclick='incluirItemPedido()']");
+    if(btnIncluir) btnIncluir.innerText = "ATUALIZAR ITEM";
+}
+
+// =======================================
+
+</script> <!-- Fim do script -->
+
+</body>
+</html>
