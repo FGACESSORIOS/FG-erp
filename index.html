@@ -1355,11 +1355,14 @@ let itensPedidoNovo=[];
 let clientePedidoSelecionado=null;
 let pedidoEditandoId=null;
 
-function gerarIdPedido(){
-const pedidos=lerLista("fg_pedidos");
-const maiorNosPedidos=pedidos.reduce((maior,pedido)=>Math.max(maior,Number(pedido.id)||0),0);
-const ultimoSalvo=Number(localStorage.getItem("ultimoIdPedido")) || 0;
-return Math.max(maiorNosPedidos,ultimoSalvo)+1;
+function gerarIdPedido() {
+    // Lê a lista de pedidos gravada
+    const pedidos = lerLista("fg_pedidos") || [];
+    if (pedidos.length === 0) return 1;
+
+    // Acha o maior ID atual e soma +1
+    const maiorId = Math.max(...pedidos.map(p => Number(p.id) || 0));
+    return maiorId + 1;
 }
 
 function abrirNovoPedido(){
@@ -1531,19 +1534,25 @@ mostrarItensPedido();
 }
 
 function cancelarNovoPedido(){
-itensPedidoNovo=[];
-clientePedidoSelecionado=null;
-pedidoEditandoId=null;
-document.getElementById("clientePedido").value="";
-document.getElementById("produtoPedido").value="";
-document.getElementById("quantidadePedido").value="";
-document.getElementById("valorUnitarioPedido").value="";
-document.getElementById("fretePedido").value="";
-document.getElementById("observacaoPedido").value="";
-document.getElementById("tituloFormPedido").textContent="Novo Pedido";
-document.getElementById("btnSalvarPedido").textContent="SALVAR PEDIDO";
-mostrarItensPedido();
-document.getElementById("formNovoPedido").style.display="none";
+    // Oculta a tela/modal do pedido
+    const form = document.getElementById("formNovoPedido");
+    if(form) form.style.display = "none";
+
+    // Reseta as variáveis de controle
+    pedidoEditandoId = null;
+    itensPedidoNovo = [];
+    clientePedidoSelecionado = null;
+
+    // Limpa os campos de texto
+    const clienteInput = document.getElementById("clientePedido");
+    const produtoInput = document.getElementById("produtoPedido");
+    const qtdInput = document.getElementById("quantidadePedido");
+    const valorInput = document.getElementById("valorUnitarioPedido");
+
+    if(clienteInput) clienteInput.value = "";
+    if(produtoInput) produtoInput.value = "";
+    if(qtdInput) qtdInput.value = "";
+    if(valorInput) valorInput.value = "";
 }
 
 function salvarNovoPedido(){
@@ -1597,25 +1606,27 @@ cancelarNovoPedido();
 }
 
 function editarPedidoCadastrado(index){
-const pedidos=lerLista("fg_pedidos");
-const pedido=pedidos[index];
-if(!pedido) return;
+    const pedidos = lerLista("fg_pedidos") || [];
+    const pedido = pedidos[index];
+    if(!pedido) return;
 
-pedidoEditandoId=index;
-document.getElementById("tituloFormPedido").textContent="Editar Pedido";
-document.getElementById("btnSalvarPedido").textContent="SALVAR ALTERAÇÕES";
-document.getElementById("idPedido").value=pedido.id || "";
-document.getElementById("statusPedido").value=normalizarStatusPedido(pedido.status);
-document.getElementById("pagamentoPedido").value=pedido.pagamento || "Antecipado";
-document.getElementById("observacaoPedido").value=pedido.observacao || "";
-document.getElementById("quantidadePedido").value="";
-document.getElementById("valorUnitarioPedido").value="";
-document.getElementById("fretePedido").value=pedido.frete ? formatarMoedaPedido(pedido.frete) : "";
-preencherClientesPedido(pedido.cliente || "");
-preencherProdutosPedido();
-itensPedidoNovo=normalizarItensPedido(pedido);
-mostrarItensPedido();
-document.getElementById("formNovoPedido").style.display="block";
+    pedidoEditandoId = index;
+
+    document.getElementById("tituloFormPedido").textContent = "Editar Pedido";
+    document.getElementById("btnSalvarPedido").textContent = "SALVAR ALTERAÇÕES";
+    document.getElementById("idPedido").value = pedido.id || "";
+    document.getElementById("statusPedido").value = normalizarStatusPedido(pedido.status);
+    document.getElementById("pagamentoPedido").value = pedido.pagamento || "Antecipado";
+    document.getElementById("observacaoPedido").value = pedido.observacao || "";
+    document.getElementById("quantidadePedido").value = "";
+    document.getElementById("valorUnitarioPedido").value = "";
+    document.getElementById("fretePedido").value = pedido.frete ? formatarMoedaPedido(pedido.frete) : "";
+    
+    preencherClientesPedido(pedido.cliente || "");
+    preencherProdutosPedido();
+    itensPedidoNovo = normalizarItensPedido(pedido);
+    mostrarItensPedido();
+    document.getElementById("formNovoPedido").style.display = "block";
 }
 
 </script>
