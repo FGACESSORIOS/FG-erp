@@ -373,12 +373,14 @@ td,th{padding:12px 15px;border:1px solid #333;text-align:center}
 <input id="idPedido" readonly>
 
 <h3>Cliente</h3>
-<select id="clientePedido" onchange="selecionarClientePedido()"></select>
+<input list="listaClientesPedido" id="clientePedido" onfocus="preencherClientesPedido()" placeholder="Digite o nome do cliente..." autocomplete="off">
+<datalist id="listaClientesPedido"></datalist>
 
 <hr>
 
 <h3>Item</h3>
-<select id="produtoPedido"></select>
+<input list="listaClientesPedido" id="clientePedido" onfocus="carregarClientesPedido()" placeholder="Digite o nome do cliente..." autocomplete="off">
+<datalist id="listaClientesPedido"></datalist>
 
 <input id="quantidadePedido" type="number" min="1" placeholder="Quantidade">
 
@@ -552,6 +554,8 @@ document.getElementById("unidade").value="UN";
 }
 
 function listarProdutos(){
+produtos.sort((a, b) => String(a.codigo || '').localeCompare(String(b.codigo || '')));
+
 const tabela=document.getElementById("listaProdutos");
 if(!tabela) return;
 tabela.innerHTML="";
@@ -928,10 +932,10 @@ canvas.width=largura;
 canvas.height=300;
 contexto.clearRect(0,0,largura,300);
 
-const totais=Array(12).fill(0);
-pedidos.forEach(pedido=>{
-const data=converterDataPedido(pedido.data);
-if(data) totais[data.getMonth()]+=obterTotalPedido(pedido);
+const totais = Array(12).fill(0);
+pedidos.forEach(pedido => {
+    const data = converterDataPedido(pedido.data);
+    if(data) totais[data.getMonth()] += obterTotalPedido(pedido);
 });
 
 const maior=Math.max(...totais);
@@ -1378,45 +1382,76 @@ document.getElementById("formNovoPedido").style.display="block";
 }
 
 function preencherClientesPedido(nomeSelecionado=""){
-const select=document.getElementById("clientePedido");
-select.innerHTML='<option value="">Selecionar cliente</option>';
-clientes.forEach((cliente,i)=>{
-select.innerHTML+=`<option value="${i}">${escaparHTML(cliente.nome || "")}</option>`;
-});
-if(nomeSelecionado){
-const indice=clientes.findIndex(cliente=>cliente.nome===nomeSelecionado);
-if(indice>=0) select.value=String(indice);
-}
-selecionarClientePedido();
+    const input = document.getElementById("clientePedido");
+    const datalist = document.getElementById("listaClientesPedido");
+
+    // Limpa ou define o valor do campo de texto
+    if(input) input.value = nomeSelecionado || "";
+
+    if(!datalist) return;
+    datalist.innerHTML = "";
+
+    // Preenche as opções da lista de busca (datalist)
+    clientes.forEach(cliente => {
+        const option = document.createElement("option");
+        option.value = cliente.codigo ? `${cliente.codigo} - ${cliente.nome}` : (cliente.nome || "");
+        datalist.appendChild(option);
+    });
 }
 
 function preencherProdutosPedido(){
-const select=document.getElementById("produtoPedido");
-select.innerHTML='<option value="">Selecionar produto</option>';
-produtos.forEach((produto,i)=>{
-const un = produto.unidade ? ` (${escaparHTML(produto.unidade)})` : "";
-select.innerHTML+=`<option value="${i}">${escaparHTML(produto.codigo || "")} - ${escaparHTML(produto.descricao || "")}${un}</option>`;
-});
+    const input = document.getElementById("produtoPedido");
+    const datalist = document.getElementById("listaProdutosPedido");
+
+    if(input) input.value = "";
+
+    if(!datalist) return;
+    datalist.innerHTML = "";
+
+    produtos.forEach(p => {
+        const option = document.createElement("option");
+        option.value = `${p.codigo} - ${p.descricao}`;
+        datalist.appendChild(option);
+    });
 }
 
 function selecionarClientePedido(){
-const indice=document.getElementById("clientePedido").value;
-clientePedidoSelecionado=indice==="" ? null : clientes[Number(indice)] || null;
+    const texto = document.getElementById("clientePedido").value.trim();
+    
+    if(!texto){
+        clientePedidoSelecionado = null;
+        return;
+    }
+
+    // Pega o código caso o formato seja "CÓDIGO - NOME"
+    const codigo = texto.split(" - ")[0].trim();
+
+    // Busca o cliente correto dentro do array de clientes
+    clientePedidoSelecionado = clientes.find(c => 
+        c.nome === texto || 
+        String(c.codigo) === codigo ||
+        `${c.codigo} - ${c.nome}` === texto
+    ) || null;
 }
 
 function incluirItemPedido(){
-const i=document.getElementById("produtoPedido").value;
-const qtd=Number(document.getElementById("quantidadePedido").value)||0;
-const valor=lerMoeda(document.getElementById("valorUnitarioPedido").value);
+    const texto = document.getElementById("produtoPedido").value;
+    const qtd = Number(document.getElementById("quantidadePedido").value) || 0;
+    const valor = lerMoeda(document.getElementById("valorUnitarioPedido").value);
 
-if(i===""){
-alert("Selecione um produto.");
-return;
-}
-if(qtd<=0 || valor<=0){
-alert("Informe quantidade e valor unitário maiores que zero.");
-return;
-}
+    // Pega apenas o código antes do traço "-"
+    const codigo = texto.split(" - ")[0].trim();
+    const i = produtos.findIndex(p => String(p.codigo) === codigo);
+
+    if(!texto || i === -1){
+        alert("Selecione um produto válido da lista.");
+        return;
+    }
+
+    if(qtd <= 0 || valor <= 0){
+        alert("Informe quantidade e valor unitário maiores que zero.");
+        return;
+    }
 
 if (itemPedidoEditandoIndex >= 0) {
         // Se estiver editando, atualiza o item existente
@@ -2001,6 +2036,31 @@ function verificarSenhaApp() {
                 if (modal) modal.style.display = "none";
             }
         });
+
+function carregarProdutosPedido() {
+    const datalist = document.getElementById("listaProdutosPedido");
+    if (!datalist) return;
+
+    datalist.innerHTML = "";
+    produtos.forEach(p => {
+        const option = document.createElement("option");
+        option.value = `${p.codigo} - ${p.descricao}`;
+        datalist.appendChild(option);
+    });
+}
+
+function carregarClientesPedido() {
+    const datalist = document.getElementById("listaClientesPedido");
+    if (!datalist) return;
+
+    datalist.innerHTML = "";
+    clientes.forEach(c => {
+        const option = document.createElement("option");
+        // Se o cliente tiver código, exibe "CÓDIGO - NOME", senão exibe só o Nome
+        option.value = c.codigo ? `${c.codigo} - ${c.nome}` : c.nome;
+        datalist.appendChild(option);
+    });
+}
 
 // =======================================
 
