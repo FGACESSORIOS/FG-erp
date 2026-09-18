@@ -239,12 +239,13 @@ td,th{padding:12px 15px;border:1px solid #333;text-align:center}
 <table>
 
 <thead>
-<tr>
-<th>Código</th>
-<th>Descrição</th>
-<th>Preço Compra</th>
-<th>Quantidade</th>
-</tr>
+    <tr>
+        <th>Código</th>
+        <th>Descrição</th>
+        <th>Preço Unit.</th>
+        <th>Qtd</th>
+        <th>Total</th>
+    </tr>
 </thead>
 
 <tbody id="listaCompras"></tbody>
@@ -1130,18 +1131,23 @@ if(!tabela) return;
 tabela.innerHTML="";
 
 if(!compras.length){
-tabela.innerHTML='<tr><td colspan="4" class="estado-vazio">Nenhuma compra lançada.</td></tr>';
-return;
+    tabela.innerHTML='<tr><td colspan="5" class="estado-vazio">Nenhuma compra lançada.</td></tr>';
+    return;
 }
 
-compras.forEach(c=>{
-tabela.innerHTML += `
-<tr>
-<td>${escaparHTML(c.codigo || "")}</td>
-<td>${escaparHTML(c.descricao || "")}</td>
-<td>${formatarMoedaPedido(c.preco)}</td>
-<td>${Number(c.quantidade) || 0}</td>
-</tr>`;
+compras.forEach(c => {
+    const preco = Number(c.preco) || 0;
+    const qtd = Number(c.quantidade) || 0;
+    const total = preco * qtd;
+
+    tabela.innerHTML += `
+    <tr>
+    <td>${escaparHTML(c.codigo || "")}</td>
+    <td>${escaparHTML(c.descricao || "")}</td>
+    <td>${formatarMoedaPedido(c.preco)}</td>
+    <td>${qtd}</td>
+    <td><strong>${formatarMoedaPedido(total)}</strong></td>
+    </tr>`;
 });
 }
 
