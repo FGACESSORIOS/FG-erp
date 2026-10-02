@@ -475,41 +475,22 @@ return [];
 }
 }
 
-async function salvarLista(chave, lista){
-    const nomeTabela = obterNomeTabela(chave);
-    
-    if(chave.includes('produtos')) produtos = lista;
-    else if(chave.includes('baixas')) baixasEstoque = lista;
-    else if(chave.includes('producoes')) producoes = lista;
-    else if(chave.includes('compras')) compras = lista;
-    else if(chave.includes('clientes')) clientes = lista;
-    else if(chave.includes('pedidos')) window._pedidosCache = lista;
+function salvarLista(chave, lista){
+localStorage.setItem(chave, JSON.stringify(lista));
+}
 
-    try { localStorage.setItem(chave, JSON.stringify(lista)); } catch(e){}
-
-    try {
-        if(lista && lista.length > 0){
-            // Tenta apagar os registros antigos da tabela de forma segura
-            await supabaseClient.from(nomeTabela).delete().neq('id', 0);
-            
-            // Prepara os dados para inserir limpos na nuvem
-            const dadosLimpos = lista.map(item => {
-                const copia = {...item};
-                // Se não for pedido, remove o ID gerado localmente para o Supabase assumir o controle sem conflito
-                if (!chave.includes('pedidos')) {
-                    delete copia.id;
-                }
-                return copia;
-            });
-
-            const { error } = await supabaseClient.from(nomeTabela).insert(dadosLimpos);
-            if(error) {
-                console.error("Erro ao inserir no Supabase (" + nomeTabela + "):", error.message);
-            }
-        }
-    } catch(err) {
-        console.error("Erro ao salvar no Supabase (" + nomeTabela + "):", err);
-    }
+function abrir(t){
+document.querySelectorAll(".tela").forEach(e=>e.classList.remove("ativa"));
+const tela = document.getElementById(t);
+if(!tela) return;
+tela.classList.add("ativa");
+if(t=="dashboard")atualizarDashboard();
+if(t=="estoque")listarEstoque();
+if(t=="compras"){carregarProdutosCompra();listarCompras();}
+if(t=="clientes")listarClientes();
+if(t=="pedidos")listarPedidosCadastrados();
+if(t=="saida"){carregarProdutosSaida();listarBaixas();}
+if(t=="producao")carregarProdutosAcabados();
 }
 
 function novoProduto(){
@@ -2008,10 +1989,22 @@ async function salvarLista(chave, lista){
 
     try {
         if(lista && lista.length > 0){
-            // Usa upsert para atualizar ou inserir mantendo os IDs originais intactos e fixos
-            const { error } = await supabaseClient.from(nomeTabela).upsert(lista);
+            // Tenta apagar os registros antigos da tabela de forma segura
+            await supabaseClient.from(nomeTabela).delete().neq('id', 0);
+            
+            // Prepara os dados para inserir limpos na nuvem
+            const dadosLimpos = lista.map(item => {
+                const copia = {...item};
+                // Se não for pedido, remove o ID gerado localmente para o Supabase assumir o controle sem conflito
+                if (!chave.includes('pedidos')) {
+                    delete copia.id;
+                }
+                return copia;
+            });
+
+            const { error } = await supabaseClient.from(nomeTabela).insert(dadosLimpos);
             if(error) {
-                console.error("Erro ao salvar no Supabase (" + nomeTabela + "):", error.message);
+                console.error("Erro ao inserir no Supabase (" + nomeTabela + "):", error.message);
             }
         }
     } catch(err) {
