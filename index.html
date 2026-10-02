@@ -1362,32 +1362,37 @@ let clientePedidoSelecionado=null;
 let pedidoEditandoId=null;
 
 function gerarIdPedido() {
-    // Lê a lista de pedidos gravada
     const pedidos = lerLista("fg_pedidos") || [];
     if (pedidos.length === 0) return 1;
 
-    // Acha o maior ID atual e soma +1
-    const maiorId = Math.max(...pedidos.map(p => Number(p.id) || 0));
+    // Filtra apenas números válidos de ID para evitar NaN ou strings corrompidas
+    const ids = pedidos.map(p => Number(p.id)).filter(id => !isNaN(id) && id > 0);
+    if (ids.length === 0) return 1;
+
+    const maiorId = Math.max(...ids);
     return maiorId + 1;
 }
 
 function abrirNovoPedido(){
-pedidoEditandoId=null;
-itensPedidoNovo=[];
-clientePedidoSelecionado=null;
-document.getElementById("tituloFormPedido").textContent="Novo Pedido";
-document.getElementById("btnSalvarPedido").textContent="SALVAR PEDIDO";
-document.getElementById("idPedido").value=gerarIdPedido();
-document.getElementById("statusPedido").value="Orçamento";
-document.getElementById("pagamentoPedido").value="Antecipado";
-document.getElementById("observacaoPedido").value="";
-document.getElementById("quantidadePedido").value="";
-document.getElementById("valorUnitarioPedido").value="";
-document.getElementById("fretePedido").value="";
-preencherClientesPedido();
-preencherProdutosPedido();
-mostrarItensPedido();
-document.getElementById("formNovoPedido").style.display="block";
+    pedidoEditandoId = null;
+    itensPedidoNovo = [];
+    clientePedidoSelecionado = null;
+    document.getElementById("tituloFormPedido").textContent = "Novo Pedido";
+    document.getElementById("btnSalvarPedido").textContent = "SALVAR PEDIDO";
+    
+    // Define o ID sequencial correto apenas para novos pedidos
+    document.getElementById("idPedido").value = gerarIdPedido();
+    
+    document.getElementById("statusPedido").value = "Orçamento";
+    document.getElementById("pagamentoPedido").value = "Antecipado";
+    document.getElementById("observacaoPedido").value = "";
+    document.getElementById("quantidadePedido").value = "";
+    document.getElementById("valorUnitarioPedido").value = "";
+    document.getElementById("fretePedido").value = "";
+    preencherClientesPedido();
+    preencherProdutosPedido();
+    mostrarItensPedido();
+    document.getElementById("formNovoPedido").style.display = "block";
 }
 
 function preencherClientesPedido(nomeSelecionado=""){
@@ -1562,53 +1567,58 @@ function cancelarNovoPedido(){
 }
 
 function salvarNovoPedido(){
-selecionarClientePedido();
-if(!clientePedidoSelecionado){
-alert("Selecione um cliente.");
-return;
-}
-if(itensPedidoNovo.length===0){
-alert("Inclua pelo menos um item.");
-return;
-}
+    selecionarClientePedido();
+    if(!clientePedidoSelecionado){
+        alert("Selecione um cliente.");
+        return;
+    }
+    if(itensPedidoNovo.length === 0){
+        alert("Inclua pelo menos um item.");
+        return;
+    }
 
-const pedidos=lerLista("fg_pedidos");
-const totalItens=itensPedidoNovo.reduce((soma,item)=>{
-return soma+(Number(item.quantidade)||0)*(Number(item.valor)||0);
-},0);
-const frete = lerMoeda(document.getElementById("fretePedido").value);
-const totalGeral = totalItens + frete;
+    const pedidos = lerLista("fg_pedidos");
+    const totalItens = itensPedidoNovo.reduce((soma, item) => {
+        return soma + (Number(item.quantidade) || 0) * (Number(item.valor) || 0);
+    }, 0);
+    
+    const frete = lerMoeda(document.getElementById("fretePedido").value);
+    const totalGeral = totalItens + frete;
 
-const existente=pedidoEditandoId!==null ? pedidos[pedidoEditandoId] : null;
-const id=existente?.id || Number(document.getElementById("idPedido").value) || gerarIdPedido();
-const pedido = {
-...existente,
-id:id,
-data:existente?.data || new Date().toLocaleDateString("pt-BR"),
-cliente: clientePedidoSelecionado.nome,
-estado: clientePedidoSelecionado.estado || "",
-status: normalizarStatusPedido(document.getElementById("statusPedido").value),
-pagamento: document.getElementById("pagamentoPedido").value,
-observacao: document.getElementById("observacaoPedido").value.trim(),
-itens: itensPedidoNovo.map(item=>({...item})),
-frete: frete,
-total: totalGeral
-};
+    // Verifica se estamos editando um pedido existente
+    const existente = pedidoEditandoId !== null ? pedidos[pedidoEditandoId] : null;
+    
+    // SE FOR EDIÇÃO: Mantém estritamente o ID original. SE FOR NOVO: Usa o gerado.
+    const id = existente ? existente.id : Number(document.getElementById("idPedido").value) || gerarIdPedido();
 
-if(pedidoEditandoId!==null){
-pedidos[pedidoEditandoId]=pedido;
-}else{
-pedidos.push(pedido);
-localStorage.setItem("ultimoIdPedido",String(id));
-}
+    const pedido = {
+        ...existente,
+        id: id, // ID travado e blindado contra alterações indesejadas
+        data: existente?.data || new Date().toLocaleDateString("pt-BR"),
+        cliente: clientePedidoSelecionado.nome,
+        estado: clientePedidoSelecionado.estado || "",
+        status: normalizarStatusPedido(document.getElementById("statusPedido").value),
+        pagamento: document.getElementById("pagamentoPedido").value,
+        observacao: document.getElementById("observacaoPedido").value.trim(),
+        itens: itensPedidoNovo.map(item => ({...item})),
+        frete: frete,
+        total: totalGeral
+    };
 
-salvarLista("fg_pedidos",pedidos);
-listarPedidosCadastrados();
-listarEstoque();
-configurarAnosDashboard();
-atualizarDashboard();
-alert(pedidoEditandoId!==null ? "Pedido atualizado com sucesso!" : "Pedido salvo com sucesso!");
-cancelarNovoPedido();
+    if(pedidoEditandoId !== null){
+        pedidos[pedidoEditandoId] = pedido;
+    } else {
+        pedidos.push(pedido);
+    }
+
+    salvarLista("fg_pedidos", pedidos);
+    listarPedidosCadastrados();
+    listarEstoque();
+    configurarAnosDashboard();
+    atualizarDashboard();
+    
+    alert(pedidoEditandoId !== null ? "Pedido atualizado com sucesso!" : "Pedido salvo com sucesso!");
+    cancelarNovoPedido();
 }
 
 function editarPedidoCadastrado(index){
@@ -1620,7 +1630,10 @@ function editarPedidoCadastrado(index){
 
     document.getElementById("tituloFormPedido").textContent = "Editar Pedido";
     document.getElementById("btnSalvarPedido").textContent = "SALVAR ALTERAÇÕES";
+    
+    // Mantém o ID original visível e travado no campo readonly
     document.getElementById("idPedido").value = pedido.id || "";
+    
     document.getElementById("statusPedido").value = normalizarStatusPedido(pedido.status);
     document.getElementById("pagamentoPedido").value = pedido.pagamento || "Antecipado";
     document.getElementById("observacaoPedido").value = pedido.observacao || "";
