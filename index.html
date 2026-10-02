@@ -1985,19 +1985,11 @@ async function salvarLista(chave, lista){
     try { localStorage.setItem(chave, JSON.stringify(lista)); } catch(e){}
 
     try {
-        await supabaseClient.from(nomeTabela).delete().neq('id', 0);
-        
         if(lista && lista.length > 0){
-            // Remove o ID local para permitir que o Supabase gere os IDs sequenciais corretos sem conflito
-            const dadosLimpos = lista.map(item => {
-                const copia = {...item};
-                delete copia.id; // Deixa o Supabase gerenciar o ID automaticamente
-                return copia;
-            });
-
-            const { error } = await supabaseClient.from(nomeTabela).insert(dadosLimpos);
+            // Usa upsert para atualizar ou inserir mantendo os IDs originais intactos e fixos
+            const { error } = await supabaseClient.from(nomeTabela).upsert(lista);
             if(error) {
-                console.error("Erro ao inserir no Supabase (" + nomeTabela + "):", error.message);
+                console.error("Erro ao salvar no Supabase (" + nomeTabela + "):", error.message);
             }
         }
     } catch(err) {
