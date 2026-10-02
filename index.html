@@ -475,22 +475,36 @@ return [];
 }
 }
 
-function salvarLista(chave, lista){
-localStorage.setItem(chave, JSON.stringify(lista));
-}
+async function salvarLista(chave, lista){
+    const nomeTabela = obterNomeTabela(chave);
+    
+    if(chave.includes('produtos')) produtos = lista;
+    else if(chave.includes('baixas')) baixasEstoque = lista;
+    else if(chave.includes('producoes')) producoes = lista;
+    else if(chave.includes('compras')) compras = lista;
+    else if(chave.includes('clientes')) clientes = lista;
+    else if(chave.includes('pedidos')) window._pedidosCache = lista;
 
-function abrir(t){
-document.querySelectorAll(".tela").forEach(e=>e.classList.remove("ativa"));
-const tela = document.getElementById(t);
-if(!tela) return;
-tela.classList.add("ativa");
-if(t=="dashboard")atualizarDashboard();
-if(t=="estoque")listarEstoque();
-if(t=="compras"){carregarProdutosCompra();listarCompras();}
-if(t=="clientes")listarClientes();
-if(t=="pedidos")listarPedidosCadastrados();
-if(t=="saida"){carregarProdutosSaida();listarBaixas();}
-if(t=="producao")carregarProdutosAcabados();
+    try { localStorage.setItem(chave, JSON.stringify(lista)); } catch(e){}
+
+    try {
+        if(lista && lista.length > 0){
+            // Prepara os dados removendo campos vazios indesejados se necessário
+            const dadosParaSalvar = lista.map(item => {
+                const copia = {...item};
+                // Se for produto e não tiver ID numérico gerenciado pelo banco, deixa o Supabase tratar ou envia limpo
+                return copia;
+            });
+
+            // Usa o upsert do Supabase para atualizar/inserir sem apagar os dados da tabela inteira
+            const { error } = await supabaseClient.from(nomeTabela).upsert(dadosParaSalvar);
+            if(error) {
+                console.error("Erro ao salvar no Supabase (" + nomeTabela + "):", error.message);
+            }
+        }
+    } catch(err) {
+        console.error("Erro ao salvar no Supabase (" + nomeTabela + "):", err);
+    }
 }
 
 function novoProduto(){
