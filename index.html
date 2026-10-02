@@ -489,17 +489,22 @@ async function salvarLista(chave, lista){
 
     try {
         if(lista && lista.length > 0){
-            // Prepara os dados removendo campos vazios indesejados se necessário
-            const dadosParaSalvar = lista.map(item => {
+            // Tenta apagar os registros antigos da tabela de forma segura
+            await supabaseClient.from(nomeTabela).delete().neq('id', 0);
+            
+            // Prepara os dados para inserir limpos na nuvem
+            const dadosLimpos = lista.map(item => {
                 const copia = {...item};
-                // Se for produto e não tiver ID numérico gerenciado pelo banco, deixa o Supabase tratar ou envia limpo
+                // Se não for pedido, remove o ID gerado localmente para o Supabase assumir o controle sem conflito
+                if (!chave.includes('pedidos')) {
+                    delete copia.id;
+                }
                 return copia;
             });
 
-            // Usa o upsert do Supabase para atualizar/inserir sem apagar os dados da tabela inteira
-            const { error } = await supabaseClient.from(nomeTabela).upsert(dadosParaSalvar);
+            const { error } = await supabaseClient.from(nomeTabela).insert(dadosLimpos);
             if(error) {
-                console.error("Erro ao salvar no Supabase (" + nomeTabela + "):", error.message);
+                console.error("Erro ao inserir no Supabase (" + nomeTabela + "):", error.message);
             }
         }
     } catch(err) {
